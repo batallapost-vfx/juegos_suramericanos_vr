@@ -53,7 +53,7 @@
   </style>
 </head>
 <body>
-  <div id="version">v42</div>
+  <div id="version">v43</div>
   <div id="hud">
     <div id="score-box">⭐ <span id="score">1000</span> pts</div>
     <div id="timer-box">⏱️ <span id="timer">0:00</span></div>
@@ -164,12 +164,15 @@
     })();
 
     // ─── SKYBOX TEXTURA ───────────────────────────────────────────────────────
-    const skyTex = new THREE.TextureLoader().load('assets/images/textura_cielo.jpeg');
-    const skyDome = new THREE.Mesh(
-      new THREE.SphereGeometry(1000,32,32),
-      new THREE.MeshBasicMaterial({ map:skyTex, side:THREE.BackSide })
-    );
+    const skyMat = new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: 0xffffff });
+    const skyDome = new THREE.Mesh(new THREE.SphereGeometry(1000,32,32), skyMat);
     scene.add(skyDome);
+    new THREE.TextureLoader().load(
+      'assets/images/textura_cielo.jpeg',
+      tex => { skyMat.map = tex; skyMat.needsUpdate = true; console.log('Cielo ✓'); },
+      undefined,
+      err => console.warn('Cielo err:', err)
+    );
 
     // ─── LUCES ────────────────────────────────────────────────────────────────
     scene.add(new THREE.AmbientLight(0xffccee, 1.4));
