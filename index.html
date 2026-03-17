@@ -21,7 +21,7 @@
   </style>
 </head>
 <body>
-  <div id="version">v80</div>
+  <div id="version">v82</div>
   <div id="hud">
     <div id="score-box">⭐ <span id="score">1000</span> pts</div>
     <div id="timer-box">⏱️ <span id="timer">0:00</span></div>
@@ -118,7 +118,7 @@
     // RÍO
     const river = new THREE.Mesh(
       new THREE.PlaneGeometry(300,1200,40,40),
-      new THREE.MeshStandardMaterial({ color:0x6aa0b8, roughness:0.15, metalness:0.5, transparent:true, opacity:0.9 })
+      new THREE.MeshStandardMaterial({ color:0x4db8d4, roughness:0.1, metalness:0.6, transparent:true, opacity:0.88 })
     );
     river.rotation.x = -Math.PI/2;
     river.position.set(0, -0.1, -400);
@@ -327,7 +327,7 @@
           k.scale.set(3,3,3);
           k.rotation.set(0,Math.PI/2,0);
           k.position.set(0,-0.9,2);
-          k.traverse(n=>{ if(n.isMesh){ n.castShadow=true; n.material=n.material.clone(); n.material.color.setHex(0x7b2d8b); n.material.emissive=new THREE.Color(0x2a0a30); n.material.emissiveIntensity=0.15; } });
+          k.traverse(n=>{ if(n.isMesh) n.castShadow=true; });
           kayakGroup.add(k);
           console.log('Kayak ✓');
         }, undefined, err=>console.warn('Kayak err:',err));
@@ -337,7 +337,7 @@
           remoMesh=gltf.scene;
           remoMesh.scale.set(2.2, 2.2, 2.2);
           remoMesh.rotation.set(0, 0, 0);
-          remoMesh.traverse(n=>{ if(n.isMesh){ n.castShadow=true; n.material=n.material.clone(); n.material.color.setHex(0xc0186a); n.material.emissive=new THREE.Color(0x3a0020); n.material.emissiveIntensity=0.15; } });
+          remoMesh.traverse(n=>{ if(n.isMesh) n.castShadow=true; });
           remoWrapper.add(remoMesh);
           console.log('Remo ✓');
         }, undefined, err=>console.warn('Remo err:',err));
