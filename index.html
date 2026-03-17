@@ -53,7 +53,7 @@
   </style>
 </head>
 <body>
-  <div id="version">v49</div>
+  <div id="version">v50</div>
   <div id="hud">
     <div id="score-box">⭐ <span id="score">1000</span> pts</div>
     <div id="timer-box">⏱️ <span id="timer">0:00</span></div>
@@ -93,7 +93,7 @@
     renderer.xr.enabled = true;
     renderer.shadowMap.enabled = true;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
+    renderer.toneMappingExposure = 0.6;
     document.body.appendChild(renderer.domElement);
     const vrBtn = VRButton.createButton(renderer);
     vrBtn.style.display = 'none';
@@ -166,6 +166,12 @@
     })();
 
     // ─── SKYBOX HDRI ──────────────────────────────────────────────────────────
+    const skyDome = new THREE.Mesh(
+      new THREE.SphereGeometry(990, 32, 32),
+      new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: 0xffaa66 })
+    );
+    skyDome.rotation.y = Math.PI; // 180° — atardecer de frente
+    scene.add(skyDome);
     (async()=>{
       try {
         const { RGBELoader } = await import('three/addons/loaders/RGBELoader.js');
@@ -174,10 +180,9 @@
         rgbeLoader.load(
           'assets/hdris/the_sky_is_on_fire_2k.hdr',
           tex => {
-            tex.mapping = THREE.EquirectangularReflectionMapping;
-            tex.offset.x = 0.5; // desplaza 180° horizontalmente
-            tex.needsUpdate = true;
-            scene.background = tex;
+            tex.mapping = THREE.UVMapping;
+            skyDome.material.map = tex;
+            skyDome.material.needsUpdate = true;
             console.log('HDRI ✓');
           },
           undefined,
@@ -187,8 +192,8 @@
     })();
 
     // ─── LUCES ────────────────────────────────────────────────────────────────
-    scene.add(new THREE.AmbientLight(0xffccee, 1.4));
-    const sunL = new THREE.DirectionalLight(0xffaa66, 2.2);
+    scene.add(new THREE.AmbientLight(0xffccee, 0.6));
+    const sunL = new THREE.DirectionalLight(0xffaa66, 0.8);
     sunL.position.set(-80,18,-300); sunL.castShadow=true; scene.add(sunL);
 
     // ─── CURVA DE LA PISTA ────────────────────────────────────────────────────
