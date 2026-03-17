@@ -53,7 +53,7 @@
   </style>
 </head>
 <body>
-  <div id="version">v48</div>
+  <div id="version">v49</div>
   <div id="hud">
     <div id="score-box">⭐ <span id="score">1000</span> pts</div>
     <div id="timer-box">⏱️ <span id="timer">0:00</span></div>
@@ -175,7 +175,7 @@
           'assets/hdris/the_sky_is_on_fire_2k.hdr',
           tex => {
             tex.mapping = THREE.EquirectangularReflectionMapping;
-            tex.rotation = Math.PI; // gira 180° para que el atardecer quede de frente
+            tex.offset.x = 0.5; // desplaza 180° horizontalmente
             tex.needsUpdate = true;
             scene.background = tex;
             console.log('HDRI ✓');
