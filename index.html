@@ -53,7 +53,7 @@
   </style>
 </head>
 <body>
-  <div id="version">v50</div>
+  <div id="version">v51</div>
   <div id="hud">
     <div id="score-box">⭐ <span id="score">1000</span> pts</div>
     <div id="timer-box">⏱️ <span id="timer">0:00</span></div>
@@ -166,23 +166,16 @@
     })();
 
     // ─── SKYBOX HDRI ──────────────────────────────────────────────────────────
-    const skyDome = new THREE.Mesh(
-      new THREE.SphereGeometry(990, 32, 32),
-      new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: 0xffaa66 })
-    );
-    skyDome.rotation.y = Math.PI; // 180° — atardecer de frente
-    scene.add(skyDome);
     (async()=>{
       try {
         const { RGBELoader } = await import('three/addons/loaders/RGBELoader.js');
         const rgbeLoader = new RGBELoader();
         rgbeLoader.setDataType(THREE.HalfFloatType);
         rgbeLoader.load(
-          'assets/hdris/the_sky_is_on_fire_2k.hdr',
+          'assets/hdris/table_mountain_2_puresky_2k.hdr',
           tex => {
-            tex.mapping = THREE.UVMapping;
-            skyDome.material.map = tex;
-            skyDome.material.needsUpdate = true;
+            tex.mapping = THREE.EquirectangularReflectionMapping;
+            scene.background = tex;
             console.log('HDRI ✓');
           },
           undefined,
