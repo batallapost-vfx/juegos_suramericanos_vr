@@ -1,1 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Juegos Suramericanos Santa Fe 2026 VR</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #000; overflow: hidden; }
+    canvas { display: block; }
+    #info {
+      position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+      color: #fff; font-family: Arial, sans-serif; font-size: 14px;
+      background: rgba(0,0,0,0.5); padding: 8px 16px; border-radius: 20px;
+      pointer-events: none; text-align: center;
+    }
+    #vr-btn {
+      position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: linear-gradient(135deg, #c0186a, #7b2d8b);
+      color: #fff; border: none; padding: 14px 32px;
+      font-size: 16px; border-radius: 30px; cursor: pointer;
+      font-family: Arial, sans-serif; letter-spacing: 1px;
+    }
+    #vr-btn:hover { opacity: 0.85; }
+  </style>
+</head>
+<body>
+  <div id="info">🎮 Joystick izquierdo: mover | Joystick derecho: girar</div>
+  <button id="vr-btn">Entrar en VR</button>
 
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { VRButton } from 'three/addons/webxr/VRButton.js';
+    import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFactory.js';
+
+    // ─── SCENE ───────────────────────────────────────────────────────────────
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x2a0a3a, 0.035);
+
+    // ─── RENDERER ────────────────────────────────────────────────────────────
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.xr.enabled = true;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.body.appendChild(renderer.domElement);
+
+    // ─── VR BUTTON ───────────────────────────────────────────────────────────
+    const vrBtn = VRButton.createButton(renderer);
+    vrBtn.style.display = 'none';
+    document.body.appendChild(vrBtn);
+    document.getElementById('vr-btn').addEventListener('click', () => vrBtn.click());
+
+    // ─── CAMERA + RIG ────────────────────────────────────────────────────────
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 500);
+    const rig = new THREE.Group(); // El rig es lo que se mueve
+    rig.add(camera);
+    rig.position.set(0, 1.6, 8);
+    scene.add(rig);
+
+    // ─── SKYBOX GRADIENT ─────────────────────────────────────────────────────
+    const skyGeo = new THREE.SphereGeometry(300, 32, 32);
+    const skyMat = new THREE.ShaderMaterial({
+      side: THREE.BackSide,
+      uniforms: {
+        topColor:    { value: new THREE.Color(0x1a0033) },
+        midColor:    { value: new THREE.Color(0x7b2d8b) },
+        bottomColor: { value: new THREE.Color(0xe8521a) },
+      },
+      vertexShader: `
+        varying vec3 vPos;
+        void main() { vPos = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }
+      `,
+      fragmentShader: `
+        uniform vec3 topColor, midColor, bottomColor;
+        varying vec3 vPos;
+        void main() {
+          float h = normalize(vPos).y;
+          vec3 col = h > 0.0
+            ? mix(midColor, topColor, h)
+            : mix(midColor, bottomColor, -h * 2.0);
+          gl_FragColor = vec4(col, 1.0);
+        }
+      `
+    });
+    scene.add(new THREE.Mesh(skyGeo, skyMat));
+
+    // ─── LIGHTS ──────────────────────────────────────────────────────────────
+    scene.add(new THREE.AmbientLight(0xffd0ff, 0.6));
+    const sun = new THREE.DirectionalLight(0xff8844, 1.2);
+    sun.position.set(10, 20, 10);
+    sun.castShadow = true;
+    scene.add(sun);
+
+    // ─── AGUA (pista de remo) ─────────────────────────────────────────────────
+    const waterGeo = new THREE.PlaneGeometry(20, 200);
+    const waterMat = new THREE.MeshStandardMaterial({
+      color: 0x1a6ba0, roughness: 0.1, metalness: 0.3,
+      transparent: true, opacity: 0.85
+    });
+    const water = new THREE.Mesh(waterGeo, waterMat);
+    water.rotation.x = -Math.PI / 2;
+    water.position.y = -0.05;
+    scene.add(water);
+
+    // ─── ORILLAS ─────────────────────────────────────────────────────────────
+    const bankMat = new THREE.MeshStandardMaterial({ color: 0x4a7c3f });
+    [-12, 12].forEach(x => {
+      const bank = new THREE.Mesh(new THREE.BoxGeometry(4, 0.3, 200), bankMat);
+      bank.position.set(x, -0.1, 0);
+      bank.receiveShadow = true;
+      scene.add(bank);
+    });
+
+    // ─── BOYAS ───────────────────────────────────────────────────────────────
+    const boyaMat = new THREE.MeshStandardMaterial({ color: 0xe8521a });
+    for (let z = -90; z <= 10; z += 15) {
+      [-4, 4].forEach(x => {
+        const boya = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 8), boyaMat);
+        boya.position.set(x, 0.25, z);
+        scene.add(boya);
+      });
+    }
+
+    // ─── TRIBUNA SIMPLE ──────────────────────────────────────────────────────
+    const tribMat = new THREE.MeshStandardMaterial({ color: 0xc0186a });
+    [-16, 16].forEach(x => {
+      for (let i = 0; i < 4; i++) {
+        const row = new THREE.Mesh(new THREE.BoxGeometry(3, 0.5, 30), tribMat);
+        row.position.set(x + (x > 0 ? i * 0.5 : -i * 0.5), i * 0.6, -20);
+        row.receiveShadow = true;
+        scene.add(row);
+      }
+    });
+
+    // ─── CAPIBARA PLACEHOLDER ─────────────────────────────────────────────────
+    // Reemplazar con sprite/GLB cuando estén los assets
+    const capiGroup = new THREE.Group();
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xc8964a });
+    const body = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 16), bodyMat);
+    body.scale.set(1.4, 0.9, 1.0);
+    capiGroup.add(body);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.38, 16, 16), bodyMat);
+    head.position.set(0.7, 0.2, 0);
+    capiGroup.add(head);
+    // vestimenta magenta
+    const vest = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.35, 0.45, 0.5, 12),
+      new THREE.MeshStandardMaterial({ color: 0xc0186a })
+    );
+    vest.position.set(0, 0, 0);
+    capiGroup.add(vest);
+    capiGroup.position.set(0, 0.5, 4);
+    scene.add(capiGroup);
+
+    // ─── CARTEL FLOTANTE ─────────────────────────────────────────────────────
+    const canvas2d = document.createElement('canvas');
+    canvas2d.width = 512; canvas2d.height = 128;
+    const ctx = canvas2d.getContext('2d');
+    const grad = ctx.createLinearGradient(0, 0, 512, 0);
+    grad.addColorStop(0, '#c0186a');
+    grad.addColorStop(0.5, '#7b2d8b');
+    grad.addColorStop(1, '#e8521a');
+    ctx.fillStyle = grad;
+    ctx.roundRect(0, 0, 512, 128, 20);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 28px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('JUEGOS SURAMERICANOS', 256, 50);
+    ctx.font = 'bold 22px Arial';
+    ctx.fillText('SANTA FE 2026', 256, 90);
+    const signTex = new THREE.CanvasTexture(canvas2d);
+    const sign = new THREE.Mesh(
+      new THREE.PlaneGeometry(4, 1),
+      new THREE.MeshBasicMaterial({ map: signTex, transparent: true })
+    );
+    sign.position.set(0, 3.5, 1);
+    scene.add(sign);
+
+    // ─── INPUT MANAGER ───────────────────────────────────────────────────────
+    const input = {
+      moveX: 0, moveZ: 0,   // joystick izquierdo
+      turnX: 0,              // joystick derecho
+    };
+
+    // Controllers XR
+    const ctrl0 = renderer.xr.getController(0);
+    const ctrl1 = renderer.xr.getController(1);
+    scene.add(ctrl0); scene.add(ctrl1);
+
+    function onAxisChanged(e) {
+      const axes = e.data?.axes || e.axes;
+      if (!axes) return;
+      const handedness = e.data?.handedness || 'left';
+      if (handedness === 'left') {
+        input.moveX = Math.abs(axes[2]) > 0.15 ? axes[2] : 0;
+        input.moveZ = Math.abs(axes[3]) > 0.15 ? axes[3] : 0;
+      } else {
+        input.turnX = Math.abs(axes[2]) > 0.15 ? axes[2] : 0;
+      }
+    }
+
+    renderer.xr.addEventListener('sessionstart', () => {
+      const session = renderer.xr.getSession();
+      session.addEventListener('selectstart', () => {});
+      // Gamepad polling se hace en el loop
+    });
+
+    // ─── TECLADO (para preview en desktop) ───────────────────────────────────
+    const keys = {};
+    window.addEventListener('keydown', e => keys[e.code] = true);
+    window.addEventListener('keyup',   e => keys[e.code] = false);
+
+    // ─── MOUSE LOOK (solo desktop) ───────────────────────────────────────────
+    let mouseDragging = false, lastMX = 0, lastMY = 0;
+    let camYaw = 0, camPitch = 0;
+    renderer.domElement.addEventListener('mousedown', e => { mouseDragging = true; lastMX = e.clientX; lastMY = e.clientY; });
+    window.addEventListener('mouseup', () => mouseDragging = false);
+    window.addEventListener('mousemove', e => {
+      if (!mouseDragging || renderer.xr.isPresenting) return;
+      camYaw   -= (e.clientX - lastMX) * 0.003;
+      camPitch -= (e.clientY - lastMY) * 0.003;
+      camPitch  = Math.max(-Math.PI/3, Math.min(Math.PI/3, camPitch));
+      lastMX = e.clientX; lastMY = e.clientY;
+      camera.rotation.order = 'YXZ';
+      camera.rotation.y = camYaw;
+      camera.rotation.x = camPitch;
+    });
+    // Touch para mobile
+    renderer.domElement.addEventListener('touchstart', e => { mouseDragging = true; lastMX = e.touches[0].clientX; lastMY = e.touches[0].clientY; });
+    window.addEventListener('touchend', () => mouseDragging = false);
+    window.addEventListener('touchmove', e => {
+      if (!mouseDragging || renderer.xr.isPresenting) return;
+      camYaw   -= (e.touches[0].clientX - lastMX) * 0.003;
+      camPitch -= (e.touches[0].clientY - lastMY) * 0.003;
+      camPitch  = Math.max(-Math.PI/3, Math.min(Math.PI/3, camPitch));
+      lastMX = e.touches[0].clientX; lastMY = e.touches[0].clientY;
+      camera.rotation.order = 'YXZ';
+      camera.rotation.y = camYaw;
+      camera.rotation.x = camPitch;
+    });
+
+    // ─── ANIMACIÓN CAPIBARA ──────────────────────────────────────────────────
+    let capiTime = 0;
+    let capiWalking = false;
+
+    // ─── ANIMATE LOOP ────────────────────────────────────────────────────────
+    const clock = new THREE.Clock();
+    const MOVE_SPEED = 5;
+    const TURN_SPEED = 1.5;
+    const dir = new THREE.Vector3();
+
+    renderer.setAnimationLoop(() => {
+      const dt = clock.getDelta();
+
+      // ── Leer gamepads XR ──
+      if (renderer.xr.isPresenting) {
+        const session = renderer.xr.getSession();
+        for (const src of session.inputSources) {
+          const gp = src.gamepad;
+          if (!gp) continue;
+          if (src.handedness === 'left') {
+            input.moveX = Math.abs(gp.axes[2]) > 0.15 ? gp.axes[2] : 0;
+            input.moveZ = Math.abs(gp.axes[3]) > 0.15 ? gp.axes[3] : 0;
+          } else {
+            input.turnX = Math.abs(gp.axes[2]) > 0.15 ? gp.axes[2] : 0;
+          }
+        }
+      }
+
+      // ── Teclado desktop ──
+      if (keys['KeyW'] || keys['ArrowUp'])    input.moveZ = -1;
+      else if (keys['KeyS'] || keys['ArrowDown'])  input.moveZ =  1;
+      else if (!renderer.xr.isPresenting)     input.moveZ =  0;
+
+      if (keys['KeyA'] || keys['ArrowLeft'])  input.moveX = -1;
+      else if (keys['KeyD'] || keys['ArrowRight']) input.moveX =  1;
+      else if (!renderer.xr.isPresenting)     input.moveX =  0;
+
+      if (keys['KeyQ']) input.turnX = -1;
+      else if (keys['KeyE']) input.turnX = 1;
+      else if (!renderer.xr.isPresenting) input.turnX = 0;
+
+      // ── Movimiento ──
+      const yaw = rig.rotation.y;
+      dir.set(input.moveX, 0, input.moveZ).normalize();
+      rig.position.x += (Math.cos(yaw) * dir.x - Math.sin(yaw) * dir.z) * MOVE_SPEED * dt;
+      rig.position.z += (Math.sin(yaw) * dir.x + Math.cos(yaw) * dir.z) * MOVE_SPEED * dt;
+      rig.rotation.y -= input.turnX * TURN_SPEED * dt;
+
+      // ── Capibara idle animation ──
+      capiTime += dt;
+      capiWalking = input.moveX !== 0 || input.moveZ !== 0;
+      capiGroup.position.y = 0.5 + Math.sin(capiTime * (capiWalking ? 8 : 2)) * 0.05;
+      capiGroup.rotation.y += dt * 0.4;
+
+      // ── Agua shimmer ──
+      water.material.color.setHSL(0.58, 0.7, 0.3 + Math.sin(capiTime * 0.5) * 0.05);
+
+      renderer.render(scene, camera);
+    });
+
+    // ─── RESIZE ──────────────────────────────────────────────────────────────
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
