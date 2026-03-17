@@ -1,7 +1,4 @@
-// Remos
-      const moving=input.moveZ!==0||input.moveX!==0;
-      if(moving) remoT+=dt*2.5;
-      remo.rotation.x = Math.sin(remoT)*0.3;       // palada adelante/atr<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -10,47 +7,21 @@
     * { margin:0; padding:0; box-sizing:border-box; }
     body { background:#000; overflow:hidden; }
     canvas { display:block; }
-    #hud {
-      position:absolute; top:16px; left:50%; transform:translateX(-50%);
-      display:flex; gap:16px; align-items:center; pointer-events:none;
-    }
-    #score-box {
-      background:rgba(0,0,0,0.55); border:2px solid #c0186a;
-      color:#fff; font-family:Arial,sans-serif; font-size:18px; font-weight:bold;
-      padding:8px 20px; border-radius:20px;
-    }
-    #timer-box {
-      background:rgba(0,0,0,0.55); border:2px solid #7b2d8b;
-      color:#fff; font-family:Arial,sans-serif; font-size:18px; font-weight:bold;
-      padding:8px 20px; border-radius:20px;
-    }
-    #info-box {
-      background:rgba(0,0,0,0.45); color:#fff;
-      font-family:Arial,sans-serif; font-size:13px;
-      padding:8px 16px; border-radius:20px;
-    }
-    #penalty {
-      position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-      color:#ff3333; font-family:Arial,sans-serif; font-size:48px; font-weight:bold;
-      text-shadow:0 0 20px #ff0000; opacity:0; pointer-events:none;
-    }
-    #finish-screen {
-      display:none; position:absolute; top:0; left:0; width:100%; height:100%;
-      background:rgba(0,0,0,0.72); flex-direction:column; align-items:center; justify-content:center;
-      font-family:Arial,sans-serif; color:#fff; text-align:center;
-    }
-    #finish-screen h1 { font-size:42px; margin-bottom:12px; color:#ffb347; text-shadow:0 0 20px #ff8800; }
+    #hud { position:absolute; top:16px; left:50%; transform:translateX(-50%); display:flex; gap:16px; align-items:center; pointer-events:none; }
+    #score-box { background:rgba(0,0,0,0.55); border:2px solid #c0186a; color:#fff; font-family:Arial,sans-serif; font-size:18px; font-weight:bold; padding:8px 20px; border-radius:20px; }
+    #timer-box { background:rgba(0,0,0,0.55); border:2px solid #7b2d8b; color:#fff; font-family:Arial,sans-serif; font-size:18px; font-weight:bold; padding:8px 20px; border-radius:20px; }
+    #info-box { background:rgba(0,0,0,0.45); color:#fff; font-family:Arial,sans-serif; font-size:13px; padding:8px 16px; border-radius:20px; }
+    #penalty { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#ff3333; font-family:Arial,sans-serif; font-size:48px; font-weight:bold; text-shadow:0 0 20px #ff0000; opacity:0; pointer-events:none; }
+    #finish-screen { display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.72); flex-direction:column; align-items:center; justify-content:center; font-family:Arial,sans-serif; color:#fff; text-align:center; }
+    #finish-screen h1 { font-size:42px; margin-bottom:12px; color:#ffb347; }
     #finish-screen .sub { font-size:22px; margin:6px 0; color:#ffccee; }
-    #finish-screen .final-score { font-size:52px; font-weight:bold; color:#c0186a; margin:18px 0; text-shadow:0 0 16px #ff00aa; }
-    #finish-screen button {
-      margin-top:20px; padding:14px 36px; font-size:18px; border:none; border-radius:30px;
-      background:linear-gradient(135deg,#c0186a,#7b2d8b); color:#fff; cursor:pointer;
-    }
+    #finish-screen .final-score { font-size:52px; font-weight:bold; color:#c0186a; margin:18px 0; }
+    #finish-screen button { margin-top:20px; padding:14px 36px; font-size:18px; border:none; border-radius:30px; background:linear-gradient(135deg,#c0186a,#7b2d8b); color:#fff; cursor:pointer; }
     #version { position:absolute; bottom:8px; right:12px; color:rgba(255,255,255,0.3); font-family:monospace; font-size:11px; pointer-events:none; }
   </style>
 </head>
 <body>
-  <div id="version">v63</div>
+  <div id="version">v66</div>
   <div id="hud">
     <div id="score-box">⭐ <span id="score">1000</span> pts</div>
     <div id="timer-box">⏱️ <span id="timer">0:00</span></div>
@@ -65,7 +36,7 @@
     <div class="final-score" id="finish-final"></div>
     <button onclick="location.reload()">🔁 Jugar de nuevo</button>
   </div>
-  <button id="vr-btn" style="position:absolute;bottom:24px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#c0186a,#7b2d8b);color:#fff;border:none;padding:14px 32px;font-size:16px;border-radius:30px;cursor:pointer;letter-spacing:1px;">Entrar en VR</button>
+  <button id="vr-btn" style="position:absolute;bottom:24px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#c0186a,#7b2d8b);color:#fff;border:none;padding:14px 32px;font-size:16px;border-radius:30px;cursor:pointer;">Entrar en VR</button>
 
   <script type="importmap">
   {
@@ -80,7 +51,6 @@
     import * as THREE from 'three';
     import { VRButton } from 'three/addons/webxr/VRButton.js';
 
-    // ─── ESCENA ───────────────────────────────────────────────────────────────
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x3a2060, 0.004);
 
@@ -93,43 +63,36 @@
     renderer.toneMappingExposure = 0.9;
     document.body.appendChild(renderer.domElement);
     const vrBtn = VRButton.createButton(renderer);
-    vrBtn.style.display='none'; document.body.appendChild(vrBtn);
-    document.getElementById('vr-btn').addEventListener('click',()=>vrBtn.click());
+    vrBtn.style.display = 'none';
+    document.body.appendChild(vrBtn);
+    document.getElementById('vr-btn').addEventListener('click', ()=>vrBtn.click());
 
-    // ─── CÁMARA + RIG ─────────────────────────────────────────────────────────
+    // CAMERA + RIG
     const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 2000);
     const rig = new THREE.Group();
     rig.add(camera);
     rig.position.set(0, 2, 20);
     scene.add(rig);
 
-    // ─── KAYAK GROUP (hijo del rig) ───────────────────────────────────────────
+    // KAYAK GROUP — todo declarado en el scope principal
     const kayakGroup = new THREE.Group();
     kayakGroup.position.set(0, -0.5, -1.0);
     rig.add(kayakGroup);
-    let remo = new THREE.Group();
-    kayakGroup.add(remo);
 
-    // ─── HDRI SKYBOX ──────────────────────────────────────────────────────────
-    (async()=>{
-      try {
-        const { RGBELoader } = await import('three/addons/loaders/RGBELoader.js');
-        const rgbeLoader = new RGBELoader();
-        rgbeLoader.setDataType(THREE.HalfFloatType);
-        rgbeLoader.load('assets/hdris/table_mountain_2_puresky_2k.hdr', tex=>{
-          tex.mapping = THREE.EquirectangularReflectionMapping;
-          scene.background = tex;
-          console.log('HDRI ✓');
-        }, undefined, err=>console.warn('HDRI err:', err));
-      } catch(e){ console.warn(e); }
-    })();
+    const remoWrapper = new THREE.Group();
+    remoWrapper.position.set(0, -0.3, -0.8);
+    kayakGroup.add(remoWrapper);
 
-    // ─── LUCES ────────────────────────────────────────────────────────────────
+    let remoMesh = null; // se asigna cuando carga el GLB
+
+    // LUCES
     scene.add(new THREE.AmbientLight(0xffccee, 1.2));
     const sunL = new THREE.DirectionalLight(0xffaa66, 1.8);
-    sunL.position.set(-80,18,-300); sunL.castShadow=true; scene.add(sunL);
+    sunL.position.set(-80, 18, -300);
+    sunL.castShadow = true;
+    scene.add(sunL);
 
-    // ─── CURVA PISTA ──────────────────────────────────────────────────────────
+    // CURVA PISTA
     const curvePts = [
       new THREE.Vector3(  0,0,  30), new THREE.Vector3(  8,0,   0),
       new THREE.Vector3( -6,0, -40), new THREE.Vector3( 10,0, -80),
@@ -139,10 +102,9 @@
       new THREE.Vector3( -6,0,-360), new THREE.Vector3(  0,0,-400),
     ];
     const trackCurve = new THREE.CatmullRomCurve3(curvePts);
-    const GATE_COUNT = 40;
-    const GATE_WIDTH = 6;
+    const GATE_COUNT = 40, GATE_WIDTH = 6;
 
-    // ─── POSICIONES DE BOYAS ──────────────────────────────────────────────────
+    // POSICIONES BOYAS
     const boyaPosL = [], boyaPosR = [];
     for(let i=0; i<GATE_COUNT; i++){
       const t = i/(GATE_COUNT-1);
@@ -153,23 +115,25 @@
       boyaPosR.push(pt.clone().addScaledVector(perp, -GATE_WIDTH));
     }
 
-    // ─── RÍO ──────────────────────────────────────────────────────────────────
+    // RÍO
     const river = new THREE.Mesh(
-      new THREE.PlaneGeometry(300,1200,80,80),
+      new THREE.PlaneGeometry(300,1200,40,40),
       new THREE.MeshStandardMaterial({ color:0x6aa0b8, roughness:0.15, metalness:0.5, transparent:true, opacity:0.9 })
     );
-    river.rotation.x=-Math.PI/2; river.position.set(0,-0.1,-400); scene.add(river);
+    river.rotation.x = -Math.PI/2;
+    river.position.set(0, -0.1, -400);
+    scene.add(river);
 
-    // ─── ORILLAS ──────────────────────────────────────────────────────────────
+    // ORILLAS
     const bkMat = new THREE.MeshStandardMaterial({ color:0x6b8c3a, roughness:0.9 });
-    const bkR = new THREE.Mesh(new THREE.BoxGeometry(80,1.5,1200), bkMat); bkR.position.set(190,-0.5,-400); scene.add(bkR);
+    const bkR = new THREE.Mesh(new THREE.BoxGeometry(80,1.5,1200), bkMat); bkR.position.set( 190,-0.5,-400); scene.add(bkR);
     const bkL = new THREE.Mesh(new THREE.BoxGeometry(80,1.5,1200), bkMat); bkL.position.set(-190,-0.5,-400); scene.add(bkL);
 
-    // ─── PUENTE ───────────────────────────────────────────────────────────────
-    const BRIDGE_Z=-120;
-    const stMat=new THREE.MeshStandardMaterial({color:0xbbbbbb,roughness:0.5,metalness:0.5});
-    const cbMat=new THREE.MeshStandardMaterial({color:0xaaaaaa,roughness:0.3,metalness:0.7});
-    const dk=new THREE.Mesh(new THREE.BoxGeometry(400,0.6,14),new THREE.MeshStandardMaterial({color:0x555555}));
+    // PUENTE
+    const BRIDGE_Z = -120;
+    const stMat = new THREE.MeshStandardMaterial({color:0xbbbbbb,roughness:0.5,metalness:0.5});
+    const cbMat = new THREE.MeshStandardMaterial({color:0xaaaaaa,roughness:0.3,metalness:0.7});
+    const dk = new THREE.Mesh(new THREE.BoxGeometry(400,0.6,14), new THREE.MeshStandardMaterial({color:0x555555}));
     dk.position.set(0,12,BRIDGE_Z); scene.add(dk);
     [-6.5,6.5].forEach(z=>{ const r=new THREE.Mesh(new THREE.BoxGeometry(400,0.3,0.3),stMat); r.position.set(0,12.6,BRIDGE_Z+z); scene.add(r); });
     [-70,70].forEach(x=>{
@@ -191,93 +155,68 @@
       const pl=new THREE.Mesh(new THREE.CylinderGeometry(1,1.3,14,8),stMat); pl.position.set(x,5.7,BRIDGE_Z); scene.add(pl);
     }
 
-    // ─── CIUDAD ───────────────────────────────────────────────────────────────
-    const buildMats = [
-      new THREE.MeshStandardMaterial({color:0x8899bb,roughness:0.6,metalness:0.3}),
-      new THREE.MeshStandardMaterial({color:0x7788aa,roughness:0.7,metalness:0.2}),
-      new THREE.MeshStandardMaterial({color:0x99aabb,roughness:0.5,metalness:0.4}),
-      new THREE.MeshStandardMaterial({color:0xaabbcc,roughness:0.6,metalness:0.3}),
+    // CIUDAD
+    const bldMats = [
+      new THREE.MeshStandardMaterial({color:0x8899bb}), new THREE.MeshStandardMaterial({color:0x7788aa}),
+      new THREE.MeshStandardMaterial({color:0x99aabb}), new THREE.MeshStandardMaterial({color:0xaabbcc}),
     ];
     const winMat = new THREE.MeshStandardMaterial({color:0xffee99,emissive:0xffcc44,emissiveIntensity:0.5});
-    const buildings = [
-      [-215,-10,22,16,55],[-240,-10,14,12,38],[-262,-10,12,10,70],[-280,-10,10,10,42],
-      [-215,-45,18,14,42],[-240,-45,20,16,65],[-265,-45,14,12,30],[-285,-45,12,10,58],
-      [-215,-85,22,16,50],[-242,-85,14,12,75],[-265,-85,16,14,44],[-285,-85,10,8,35],
-      [-215,-125,18,14,38],[-240,-125,22,18,62],[-268,-125,14,12,48],[-288,-125,12,10,72],
-      [-215,-165,20,16,52],[-242,-165,14,12,68],[-265,-165,18,14,36],[-285,-165,10,8,55],
-      [-215,-205,22,16,45],[-244,-205,16,14,78],[-268,-205,14,12,40],[-288,-205,12,10,62],
-      [-215,-245,18,14,48],[-240,-245,20,16,58],[-265,-245,14,12,35],[-285,-245,10,8,70],
-      [-215,-285,22,18,55],[-244,-285,14,12,42],[-267,-285,16,14,66],[-287,-285,12,10,38],
-      [-215,-325,18,14,60],[-240,-325,22,16,48],[-265,-325,14,12,72],[-285,-325,10,8,44],
-      [-215,-365,20,16,40],[-242,-365,16,14,65],[-266,-365,18,14,50],[-286,-365,12,10,55],
-      [-305,-20,16,14,28],[-325,-20,12,10,36],[-345,-20,14,12,22],
-      [-305,-70,14,12,32],[-328,-70,16,14,44],[-350,-70,10,8,26],
-      [-305,-130,18,14,38],[-328,-130,14,12,28],[-350,-130,12,10,42],
-      [-305,-190,16,14,30],[-325,-190,18,16,46],[-348,-190,12,10,24],
-      [-305,-250,14,12,36],[-326,-250,16,14,52],[-350,-250,10,8,30],
-      [-305,-310,18,16,40],[-328,-310,14,12,26],[-350,-310,12,10,48],
-      [-305,-370,16,14,34],[-326,-370,18,16,44],[-350,-370,10,8,28],
-    ];
-    buildings.forEach(([x,z,w,d,h],i)=>{
-      const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),buildMats[i%4]);
-      b.position.set(x,h/2-0.5,z); b.castShadow=true; scene.add(b);
-      for(let wy=4;wy<h-4;wy+=6){
-        for(let wx=-w/2+3;wx<w/2-2;wx+=4){
-          const win=new THREE.Mesh(new THREE.PlaneGeometry(1.5,2),winMat);
-          win.position.set(x+wx,wy,z+d/2+0.1); scene.add(win);
-        }
+    [[-215,-10,22,16,55],[-240,-10,14,12,38],[-262,-10,12,10,70],[-280,-10,10,10,42],
+     [-215,-45,18,14,42],[-240,-45,20,16,65],[-265,-45,14,12,30],[-285,-45,12,10,58],
+     [-215,-85,22,16,50],[-242,-85,14,12,75],[-265,-85,16,14,44],[-285,-85,10,8,35],
+     [-215,-125,18,14,38],[-240,-125,22,18,62],[-268,-125,14,12,48],[-288,-125,12,10,72],
+     [-215,-165,20,16,52],[-242,-165,14,12,68],[-265,-165,18,14,36],[-285,-165,10,8,55],
+     [-215,-205,22,16,45],[-244,-205,16,14,78],[-268,-205,14,12,40],[-288,-205,12,10,62],
+     [-215,-245,18,14,48],[-240,-245,20,16,58],[-265,-245,14,12,35],[-285,-245,10,8,70],
+     [-215,-285,22,18,55],[-244,-285,14,12,42],[-267,-285,16,14,66],[-287,-285,12,10,38],
+     [-215,-325,18,14,60],[-240,-325,22,16,48],[-265,-325,14,12,72],[-285,-325,10,8,44],
+     [-215,-365,20,16,40],[-242,-365,16,14,65],[-266,-365,18,14,50],[-286,-365,12,10,55],
+     [-305,-20,16,14,28],[-325,-20,12,10,36],[-305,-70,14,12,32],[-328,-70,16,14,44],
+     [-305,-130,18,14,38],[-328,-130,14,12,28],[-305,-190,16,14,30],[-325,-190,18,16,46],
+     [-305,-250,14,12,36],[-326,-250,16,14,52],[-305,-310,18,16,40],[-328,-310,14,12,26],
+    ].forEach(([x,z,w,d,h],i)=>{
+      const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),bldMats[i%4]);
+      b.position.set(x,h/2-0.5,z); scene.add(b);
+      for(let wy=4;wy<h-4;wy+=6) for(let wx=-w/2+3;wx<w/2-2;wx+=4){
+        const win=new THREE.Mesh(new THREE.PlaneGeometry(1.5,2),winMat);
+        win.position.set(x+wx,wy,z+d/2+0.1); scene.add(win);
       }
     });
 
-    // ─── BARCOS ───────────────────────────────────────────────────────────────
+    // BARCOS
     function makeBarco(x,z,largo,ancho,color){
       const g=new THREE.Group();
-      const casco=new THREE.Mesh(new THREE.BoxGeometry(largo,3,ancho),new THREE.MeshStandardMaterial({color,roughness:0.7,metalness:0.4}));
-      casco.position.set(0,0.5,0); g.add(casco);
-      const cabina=new THREE.Mesh(new THREE.BoxGeometry(largo*0.22,5,ancho*0.7),new THREE.MeshStandardMaterial({color:0xddddcc,roughness:0.5}));
-      cabina.position.set(-largo*0.28,4.5,0); g.add(cabina);
-      const chim=new THREE.Mesh(new THREE.CylinderGeometry(0.6,0.8,4,8),new THREE.MeshStandardMaterial({color:0x333333}));
-      chim.position.set(-largo*0.28,8,0); g.add(chim);
-      [0,1,2].forEach(i=>{
-        const c=new THREE.Mesh(new THREE.BoxGeometry(largo*0.18,3.5,ancho*0.55),new THREE.MeshStandardMaterial({color:[0xcc3322,0x2255aa,0x228833][i]}));
-        c.position.set(-largo*0.05+i*largo*0.18,3.8,0); g.add(c);
-      });
+      const casco=new THREE.Mesh(new THREE.BoxGeometry(largo,3,ancho),new THREE.MeshStandardMaterial({color,roughness:0.7}));
+      casco.position.y=0.5; g.add(casco);
+      const cab=new THREE.Mesh(new THREE.BoxGeometry(largo*0.22,5,ancho*0.7),new THREE.MeshStandardMaterial({color:0xddddcc}));
+      cab.position.set(-largo*0.28,4.5,0); g.add(cab);
+      [0,1,2].forEach(i=>{ const c=new THREE.Mesh(new THREE.BoxGeometry(largo*0.18,3.5,ancho*0.55),new THREE.MeshStandardMaterial({color:[0xcc3322,0x2255aa,0x228833][i]})); c.position.set(-largo*0.05+i*largo*0.18,3.8,0); g.add(c); });
       g.position.set(x,-1,z); return g;
     }
-    scene.add(makeBarco(-200,-60, 55,14,0x334455));
+    scene.add(makeBarco(-200,-60,55,14,0x334455));
     scene.add(makeBarco(-220,-200,65,16,0x445533));
     scene.add(makeBarco(-210,-340,50,12,0x554433));
 
-    // ─── META ─────────────────────────────────────────────────────────────────
-    const metaPt = trackCurve.getPoint(1);
+    // META
+    const metaPt  = trackCurve.getPoint(1);
     const metaTan = trackCurve.getTangent(1);
     const metaPerp = new THREE.Vector3(-metaTan.z,0,metaTan.x).normalize();
     const metaPostMat = new THREE.MeshStandardMaterial({color:0xffee00,emissive:0xffee00,emissiveIntensity:0.8});
-    const metaL = new THREE.Mesh(new THREE.BoxGeometry(0.3,6,0.3),metaPostMat);
-    const metaR = metaL.clone();
-    metaL.position.set(metaPt.x+metaPerp.x*(GATE_WIDTH+1),3,metaPt.z);
-    metaR.position.set(metaPt.x-metaPerp.x*(GATE_WIDTH+1),3,metaPt.z);
-    scene.add(metaL); scene.add(metaR);
-    const bannerCv=document.createElement('canvas'); bannerCv.width=512; bannerCv.height=128;
-    const bCtx2=bannerCv.getContext('2d');
-    const bg2=bCtx2.createLinearGradient(0,0,512,0);
-    bg2.addColorStop(0,'#c0186a'); bg2.addColorStop(0.5,'#7b2d8b'); bg2.addColorStop(1,'#e8521a');
-    bCtx2.fillStyle=bg2; bCtx2.fillRect(0,0,512,128);
-    bCtx2.fillStyle='#ffee00'; bCtx2.font='bold 56px Arial'; bCtx2.textAlign='center';
-    bCtx2.fillText('🏁 META',256,80);
-    const metaBanner=new THREE.Mesh(new THREE.PlaneGeometry(GATE_WIDTH*2+2,1.5),
-      new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(bannerCv),transparent:true,side:THREE.DoubleSide}));
-    metaBanner.position.set(metaPt.x,5.5,metaPt.z);
-    metaBanner.rotation.y=Math.atan2(metaTan.x,metaTan.z);
-    scene.add(metaBanner);
+    const metaL = new THREE.Mesh(new THREE.BoxGeometry(0.3,6,0.3),metaPostMat); metaL.position.set(metaPt.x+metaPerp.x*(GATE_WIDTH+1),3,metaPt.z); scene.add(metaL);
+    const metaR = metaL.clone(); metaR.position.set(metaPt.x-metaPerp.x*(GATE_WIDTH+1),3,metaPt.z); scene.add(metaR);
+    const banCv=document.createElement('canvas'); banCv.width=512; banCv.height=128;
+    const bCtx2=banCv.getContext('2d');
+    const bg2=bCtx2.createLinearGradient(0,0,512,0); bg2.addColorStop(0,'#c0186a'); bg2.addColorStop(0.5,'#7b2d8b'); bg2.addColorStop(1,'#e8521a');
+    bCtx2.fillStyle=bg2; bCtx2.fillRect(0,0,512,128); bCtx2.fillStyle='#ffee00'; bCtx2.font='bold 56px Arial'; bCtx2.textAlign='center'; bCtx2.fillText('🏁 META',256,80);
+    const metaBanner=new THREE.Mesh(new THREE.PlaneGeometry(GATE_WIDTH*2+2,1.5),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(banCv),transparent:true,side:THREE.DoubleSide}));
+    metaBanner.position.set(metaPt.x,5.5,metaPt.z); metaBanner.rotation.y=Math.atan2(metaTan.x,metaTan.z); scene.add(metaBanner);
 
-    // ─── CAPIBARA ─────────────────────────────────────────────────────────────
+    // CAPIBARA
     const capiTex=new THREE.TextureLoader().load('assets/sprites/016_Canotaje_Capibara_v06.png');
-    const capiMesh=new THREE.Mesh(new THREE.PlaneGeometry(4,4),
-      new THREE.MeshStandardMaterial({map:capiTex,transparent:true,depthWrite:false,side:THREE.DoubleSide,roughness:0.8}));
+    const capiMesh=new THREE.Mesh(new THREE.PlaneGeometry(4,4),new THREE.MeshStandardMaterial({map:capiTex,transparent:true,depthWrite:false,side:THREE.DoubleSide,roughness:0.8}));
     capiMesh.position.set(12,2,-10); scene.add(capiMesh);
 
-    // ─── GLOBO ────────────────────────────────────────────────────────────────
+    // GLOBO
     const bCv=document.createElement('canvas'); bCv.width=512; bCv.height=256;
     const bCtx=bCv.getContext('2d');
     function drawBubble(text){
@@ -293,124 +232,20 @@
     }
     drawBubble('¡Seguí la pista! ¡Pasá entre las boyas!');
     const bubbleTex=new THREE.CanvasTexture(bCv);
-    const bubble=new THREE.Mesh(new THREE.PlaneGeometry(3,1.5),
-      new THREE.MeshBasicMaterial({map:bubbleTex,transparent:true,depthWrite:false,side:THREE.DoubleSide}));
+    const bubble=new THREE.Mesh(new THREE.PlaneGeometry(3,1.5),new THREE.MeshBasicMaterial({map:bubbleTex,transparent:true,depthWrite:false,side:THREE.DoubleSide}));
     bubble.visible=false; scene.add(bubble);
 
-    // ─── CARTEL ───────────────────────────────────────────────────────────────
+    // CARTEL
     const c2d=document.createElement('canvas'); c2d.width=512; c2d.height=128;
     const ctx=c2d.getContext('2d');
-    const gr=ctx.createLinearGradient(0,0,512,0);
-    gr.addColorStop(0,'#c0186a'); gr.addColorStop(0.5,'#7b2d8b'); gr.addColorStop(1,'#e8521a');
+    const gr=ctx.createLinearGradient(0,0,512,0); gr.addColorStop(0,'#c0186a'); gr.addColorStop(0.5,'#7b2d8b'); gr.addColorStop(1,'#e8521a');
     ctx.fillStyle=gr; ctx.roundRect(0,0,512,128,20); ctx.fill();
     ctx.fillStyle='#fff'; ctx.font='bold 28px Arial'; ctx.textAlign='center';
     ctx.fillText('JUEGOS SURAMERICANOS',256,50); ctx.font='bold 22px Arial'; ctx.fillText('SANTA FE 2026',256,90);
     const sign=new THREE.Mesh(new THREE.PlaneGeometry(5,1.25),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c2d),transparent:true}));
     sign.position.set(0,5,10); scene.add(sign);
 
-    // ─── GLB LOADER (kayak, remo, boyas, árboles) ─────────────────────────────
-    (async()=>{
-      try {
-        const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
-        const loader = new GLTFLoader();
-        loader.setRequestHeader({});
-
-        // KAYAK — tus valores exactos
-        loader.load('assets/models/Kayak.glb', gltf=>{
-          const k = gltf.scene;
-          k.scale.set(3,3,3);
-          k.rotation.set(0, Math.PI/2, 0);
-          k.position.set(0,-0.9,2);
-          k.traverse(n=>{
-            if(n.isMesh){
-              n.castShadow=true;
-              n.material=n.material.clone();
-              n.material.color.setHex(0x7b2d8b);
-              n.material.emissive=new THREE.Color(0x2a0a30);
-              n.material.emissiveIntensity=0.15;
-            }
-          });
-          kayakGroup.add(k);
-          console.log('Kayak ✓');
-        }, undefined, err=>console.warn('Kayak err:',err));
-
-        // REMO
-        loader.load('assets/models/Remo.glb', gltf=>{
-          kayakGroup.remove(remo);
-          remo=gltf.scene;
-          remo.scale.set(1.6,1.6,1.6);
-          remo.position.set(0,-0.3,-0.8);
-          remo.rotation.set(0, 0, 0); // horizontal base
-          remo.traverse(n=>{
-            if(n.isMesh){
-              n.castShadow=true;
-              n.material=n.material.clone();
-              n.material.color.setHex(0xc0186a);
-              n.material.emissive=new THREE.Color(0x3a0020);
-              n.material.emissiveIntensity=0.15;
-            }
-          });
-          kayakGroup.add(remo);
-          console.log('Remo ✓');
-        }, undefined, err=>console.warn('Remo err:',err));
-
-        // BOYAS INFLABLES — magenta izquierda, púrpura derecha
-        loader.load('assets/models/inflatable_buoy.glb', gltf=>{
-          const boyaTemplate = gltf.scene;
-          boyaPosL.forEach(p=>{
-            const b=boyaTemplate.clone();
-            b.scale.set(1,1,1);
-            b.position.set(p.x,0,p.z);
-            b.traverse(n=>{
-              if(n.isMesh){
-                n.castShadow=true;
-                n.material=n.material.clone();
-                n.material.color.setHex(0xc0186a);
-              }
-            });
-            scene.add(b);
-          });
-          boyaPosR.forEach(p=>{
-            const b=boyaTemplate.clone();
-            b.scale.set(1,1,1);
-            b.position.set(p.x,0,p.z);
-            b.traverse(n=>{
-              if(n.isMesh){
-                n.castShadow=true;
-                n.material=n.material.clone();
-                n.material.color.setHex(0x7b2d8b);
-              }
-            });
-            scene.add(b);
-          });
-          console.log('Boyas ✓');
-        }, undefined, err=>{
-          console.warn('Boyas err, fallback geométrico:', err);
-          boyaPosL.forEach(p=>{ const b=new THREE.Mesh(new THREE.SphereGeometry(0.4,8,8),new THREE.MeshStandardMaterial({color:0xc0186a})); b.position.set(p.x,0.4,p.z); scene.add(b); });
-          boyaPosR.forEach(p=>{ const b=new THREE.Mesh(new THREE.SphereGeometry(0.4,8,8),new THREE.MeshStandardMaterial({color:0x7b2d8b})); b.position.set(p.x,0.4,p.z); scene.add(b); });
-        });
-
-        // ÁRBOLES
-        const treePosArr=[];
-        for(let z=10;z>-780;z-=18){
-          treePosArr.push([155+Math.random()*10,0,z+Math.random()*6]);
-          treePosArr.push([168+Math.random()*10,0,z+Math.random()*6]);
-        }
-        loader.load('assets/models/arbol 01.glb', gltf=>{
-          treePosArr.forEach(([x,y,z])=>{
-            const tr=gltf.scene.clone(), s=3+Math.random()*2;
-            tr.scale.set(s,s,s); tr.position.set(x,y,z);
-            tr.rotation.y=Math.random()*Math.PI*2;
-            tr.traverse(n=>{ if(n.isMesh){ n.castShadow=true; n.receiveShadow=true; } });
-            scene.add(tr);
-          });
-          console.log('Árboles ✓');
-        }, undefined, err=>console.warn('Árboles err:',err));
-
-      } catch(e){ console.warn('GLTFLoader:',e); }
-    })();
-
-    // ─── INPUT ────────────────────────────────────────────────────────────────
+    // INPUT
     const keys={};
     window.addEventListener('keydown',e=>keys[e.code]=true);
     window.addEventListener('keyup',  e=>keys[e.code]=false);
@@ -426,28 +261,21 @@
     });
     const input={moveX:0,moveZ:0,turnX:0};
 
-    // ─── SCORING ──────────────────────────────────────────────────────────────
+    // SCORING
     let score=1000, penaltyCooldown=0, wasOutside=false, raceTime=0, raceFinished=false;
     const scoreEl=document.getElementById('score');
     const timerEl=document.getElementById('timer');
     const penaltyEl=document.getElementById('penalty');
     const finishScreen=document.getElementById('finish-screen');
-
-    function showPenalty(){
-      penaltyEl.style.opacity='1';
-      setTimeout(()=>penaltyEl.style.opacity='0',700);
-    }
-    function formatTime(s){
-      const m=Math.floor(s/60), sec=Math.floor(s%60);
-      return `${m}:${sec.toString().padStart(2,'0')}`;
-    }
+    function showPenalty(){ penaltyEl.style.opacity='1'; setTimeout(()=>penaltyEl.style.opacity='0',700); }
+    function formatTime(s){ const m=Math.floor(s/60),sec=Math.floor(s%60); return `${m}:${sec.toString().padStart(2,'0')}`; }
     function triggerFinish(){
       raceFinished=true;
       const timeBonus=Math.max(0,Math.round(500-raceTime*5));
       const finalScore=score+timeBonus;
       document.getElementById('finish-time').textContent=`⏱️ Tiempo: ${formatTime(raceTime)}`;
       document.getElementById('finish-points').textContent=`⭐ Puntos: ${score}`;
-      document.getElementById('finish-bonus').textContent=`🚀 Bonus velocidad: +${timeBonus}`;
+      document.getElementById('finish-bonus').textContent=`🚀 Bonus: +${timeBonus}`;
       document.getElementById('finish-final').textContent=`TOTAL: ${finalScore} pts`;
       finishScreen.style.display='flex';
       drawBubble('¡Felicitaciones! ¡Llegaste a la meta! 🏆');
@@ -457,16 +285,75 @@
       bubble.position.set(metaPt.x+3,5.5,metaPt.z);
     }
     function closestPointOnCurve(px,pz){
-      let bestDist=Infinity, bestPt=null;
-      for(let i=0;i<=120;i++){
-        const pt=trackCurve.getPoint(i/120);
-        const d=(px-pt.x)**2+(pz-pt.z)**2;
-        if(d<bestDist){ bestDist=d; bestPt=pt; }
-      }
+      let bestDist=Infinity,bestPt=null;
+      for(let i=0;i<=120;i++){ const pt=trackCurve.getPoint(i/120); const d=(px-pt.x)**2+(pz-pt.z)**2; if(d<bestDist){bestDist=d;bestPt=pt;} }
       return bestPt;
     }
 
-    // ─── LOOP ─────────────────────────────────────────────────────────────────
+    // GLB LOADER — todo en un solo async
+    (async()=>{
+      try {
+        const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
+        const loader = new GLTFLoader();
+        loader.setRequestHeader({});
+
+        // HDRI
+        try {
+          const { RGBELoader } = await import('three/addons/loaders/RGBELoader.js');
+          const rgbe = new RGBELoader();
+          rgbe.setDataType(THREE.HalfFloatType);
+          rgbe.load('assets/hdris/table_mountain_2_puresky_2k.hdr', tex=>{
+            tex.mapping=THREE.EquirectangularReflectionMapping;
+            scene.background=tex;
+            console.log('HDRI ✓');
+          }, undefined, err=>console.warn('HDRI err:',err));
+        } catch(e){ console.warn('RGBELoader:',e); }
+
+        // KAYAK — valores exactos del usuario
+        loader.load('assets/models/Kayak.glb', gltf=>{
+          const k=gltf.scene;
+          k.scale.set(3,3,3);
+          k.rotation.set(0,Math.PI/2,0);
+          k.position.set(0,-0.9,2);
+          k.traverse(n=>{ if(n.isMesh){ n.castShadow=true; n.material=n.material.clone(); n.material.color.setHex(0x7b2d8b); n.material.emissive=new THREE.Color(0x2a0a30); n.material.emissiveIntensity=0.15; } });
+          kayakGroup.add(k);
+          console.log('Kayak ✓');
+        }, undefined, err=>console.warn('Kayak err:',err));
+
+        // REMO — va al remoWrapper
+        loader.load('assets/models/Remo.glb', gltf=>{
+          remoMesh=gltf.scene;
+          remoMesh.scale.set(1.6,1.6,1.6);
+          remoMesh.rotation.set(0,0,Math.PI/2); // horizontal fijo, nunca se toca
+          remoMesh.traverse(n=>{ if(n.isMesh){ n.castShadow=true; n.material=n.material.clone(); n.material.color.setHex(0xc0186a); n.material.emissive=new THREE.Color(0x3a0020); n.material.emissiveIntensity=0.15; } });
+          remoWrapper.add(remoMesh);
+          console.log('Remo ✓');
+        }, undefined, err=>console.warn('Remo err:',err));
+
+        // BOYAS INFLABLES
+        loader.load('assets/models/inflatable_buoy.glb', gltf=>{
+          const tmpl=gltf.scene;
+          boyaPosL.forEach(p=>{ const b=tmpl.clone(); b.scale.set(1,1,1); b.position.set(p.x,0,p.z); b.traverse(n=>{ if(n.isMesh){ n.material=n.material.clone(); n.material.color.setHex(0xc0186a); } }); scene.add(b); });
+          boyaPosR.forEach(p=>{ const b=tmpl.clone(); b.scale.set(1,1,1); b.position.set(p.x,0,p.z); b.traverse(n=>{ if(n.isMesh){ n.material=n.material.clone(); n.material.color.setHex(0x7b2d8b); } }); scene.add(b); });
+          console.log('Boyas ✓');
+        }, undefined, err=>{
+          console.warn('Boyas fallback:',err);
+          boyaPosL.forEach(p=>{ const b=new THREE.Mesh(new THREE.SphereGeometry(0.4,8,8),new THREE.MeshStandardMaterial({color:0xc0186a})); b.position.set(p.x,0.4,p.z); scene.add(b); });
+          boyaPosR.forEach(p=>{ const b=new THREE.Mesh(new THREE.SphereGeometry(0.4,8,8),new THREE.MeshStandardMaterial({color:0x7b2d8b})); b.position.set(p.x,0.4,p.z); scene.add(b); });
+        });
+
+        // ÁRBOLES
+        const treePts=[];
+        for(let z=10;z>-780;z-=18){ treePts.push([155+Math.random()*10,0,z+Math.random()*6]); treePts.push([168+Math.random()*10,0,z+Math.random()*6]); }
+        loader.load('assets/models/arbol 01.glb', gltf=>{
+          treePts.forEach(([x,y,z])=>{ const tr=gltf.scene.clone(),s=3+Math.random()*2; tr.scale.set(s,s,s); tr.position.set(x,y,z); tr.rotation.y=Math.random()*Math.PI*2; scene.add(tr); });
+          console.log('Árboles ✓');
+        }, undefined, err=>console.warn('Árboles err:',err));
+
+      } catch(e){ console.warn('GLTFLoader no disponible:',e); }
+    })();
+
+    // LOOP
     const clock=new THREE.Clock();
     let t=0, remoT=0;
 
@@ -476,7 +363,6 @@
       penaltyCooldown=Math.max(0,penaltyCooldown-dt);
       timerEl.textContent=formatTime(raceTime);
 
-      // Gamepads XR
       if(renderer.xr.isPresenting){
         for(const src of renderer.xr.getSession().inputSources){
           const gp=src.gamepad; if(!gp) continue;
@@ -493,40 +379,30 @@
       rig.position.z+=(Math.sin(yaw)*input.moveX+Math.cos(yaw)*input.moveZ)*8*dt;
       rig.rotation.y-=input.turnX*1.5*dt;
 
-      // Remos
+      // Animación remo — solo el wrapper, el mesh queda intacto
       const moving=input.moveZ!==0||input.moveX!==0;
       if(moving) remoT+=dt*2.5;
-      remo.rotation.x=Math.sin(remoT)*0.3;
-      remo.rotation.z=Math.PI/2+Math.sin(remoT)*0.18;
-      remo.position.y=-0.3+Math.sin(remoT)*0.06;
+      remoWrapper.rotation.x=Math.sin(remoT)*0.3;
+      remoWrapper.rotation.y=Math.sin(remoT)*0.18;
+      remoWrapper.position.y=-0.3+Math.sin(remoT)*0.06;
       kayakGroup.rotation.z=Math.sin(remoT)*(moving?0.02:0);
 
-      // Oleaje
       river.position.y=-0.1+Math.sin(t*0.4)*0.04;
 
-      // Meta
-      if(!raceFinished && rig.position.z<metaPt.z+3 && rig.position.z>metaPt.z-3) triggerFinish();
+      if(!raceFinished&&rig.position.z<metaPt.z+3&&rig.position.z>metaPt.z-3) triggerFinish();
 
-      // Corredor
-      const px=rig.position.x, pz=rig.position.z;
+      const px=rig.position.x,pz=rig.position.z;
       if(pz<25&&pz>-410){
         const cp=closestPointOnCurve(px,pz);
         const dist=Math.sqrt((px-cp.x)**2+(pz-cp.z)**2);
         const isOutside=dist>GATE_WIDTH+1.5;
-        if(isOutside&&!wasOutside&&penaltyCooldown<=0){
-          score=Math.max(0,score-25);
-          scoreEl.textContent=score;
-          showPenalty();
-          penaltyCooldown=2.0;
-        }
+        if(isOutside&&!wasOutside&&penaltyCooldown<=0){ score=Math.max(0,score-25); scoreEl.textContent=score; showPenalty(); penaltyCooldown=2.0; }
         wasOutside=isOutside;
       }
 
-      // Capi
       capiMesh.position.y=2+Math.sin(t*1.2)*0.15;
       capiMesh.lookAt(rig.position.x,capiMesh.position.y,rig.position.z);
 
-      // Globo
       const dCapi=rig.position.distanceTo(capiMesh.position);
       if(dCapi<8){
         bubble.visible=true;
