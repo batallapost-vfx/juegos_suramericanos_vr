@@ -29,7 +29,7 @@
   </style>
 </head>
 <body>
-  <div id="version">v26</div>
+  <div id="version">v27</div>
   <div id="info">🖱️ Click + arrastrar: mirar | WASD: mover | Q/E: girar</div>
   <button id="vr-btn">Entrar en VR</button>
 
@@ -176,30 +176,33 @@
     beach.position.set(0, -0.05, 30);
     scene.add(beach);
 
-    // ─── ÁRBOLES GEOMÉTRICOS ─────────────────────────────────────────────────
-    function makeTree(x, z, h = 5) {
-      const g = new THREE.Group();
-      const trunk = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.2, 0.3, h * 0.4, 6),
-        new THREE.MeshStandardMaterial({ color: 0x5c3d1e })
-      );
-      trunk.position.y = h * 0.2;
-      trunk.castShadow = true;
-      g.add(trunk);
-      const foliage = new THREE.Mesh(
-        new THREE.SphereGeometry(h * 0.28, 7, 7),
-        new THREE.MeshStandardMaterial({ color: 0x2d6e2a, roughness: 0.9 })
-      );
-      foliage.position.y = h * 0.55;
-      foliage.castShadow = true;
-      g.add(foliage);
-      g.position.set(x, 0, z);
-      return g;
-    }
-    for (let z = -350; z < 50; z += 12) {
-      scene.add(makeTree(152 + Math.random() * 8, z + Math.random() * 4, 4 + Math.random() * 4));
-      scene.add(makeTree(160 + Math.random() * 8, z + Math.random() * 4, 4 + Math.random() * 3));
-    }
+    // ─── ÁRBOLES GLB ─────────────────────────────────────────────────────────
+    const treePositions = [
+      [155,0,-10],[162,0,-30],[150,0,-50],[158,0,-70],[153,0,-90],
+      [160,0,-110],[155,0,-130],[162,0,-150],[150,0,-170],[157,0,-190],
+      [-155,0,-10],[-162,0,-30],[-150,0,-50],[-158,0,-70],[-153,0,-90],
+      [-160,0,-110],[-155,0,-130],[-162,0,-150],[-150,0,-170],[-157,0,-190],
+    ];
+    (async () => {
+      try {
+        const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
+        const loader = new GLTFLoader();
+        loader.load('assets/models/arbol 01.glb', (gltf) => {
+          treePositions.forEach(([x, y, z]) => {
+            const tree = gltf.scene.clone();
+            const s = 3 + Math.random() * 2;
+            tree.scale.set(s, s, s);
+            tree.position.set(x + (Math.random()-0.5)*6, y, z + (Math.random()-0.5)*6);
+            tree.rotation.y = Math.random() * Math.PI * 2;
+            tree.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
+            scene.add(tree);
+          });
+          console.log('Árboles GLB cargados ✓');
+        }, undefined, err => console.warn('GLB no cargó, usando árboles geométricos:', err));
+      } catch(e) {
+        console.warn('GLTFLoader no disponible:', e);
+      }
+    })();
 
     // ─── PUENTE ROSARIO-VICTORIA ──────────────────────────────────────────────
     const BRIDGE_Z = -120;
