@@ -21,7 +21,7 @@
   </style>
 </head>
 <body>
-  <div id="version">v76</div>
+  <div id="version">v78</div>
   <div id="hud">
     <div id="score-box">⭐ <span id="score">1000</span> pts</div>
     <div id="timer-box">⏱️ <span id="timer">0:00</span></div>
@@ -52,7 +52,7 @@
     import { VRButton } from 'three/addons/webxr/VRButton.js';
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x3a2060, 0.004);
+    scene.fog = new THREE.FogExp2(0x8899bb, 0.003);
 
     const renderer = new THREE.WebGLRenderer({ antialias:true });
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -185,10 +185,14 @@
     const metaBanner=new THREE.Mesh(new THREE.PlaneGeometry(GATE_WIDTH*2+2,1.5),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(banCv),transparent:true,side:THREE.DoubleSide}));
     metaBanner.position.set(metaPt.x,5.5,metaPt.z); metaBanner.rotation.y=Math.atan2(metaTan.x,metaTan.z); scene.add(metaBanner);
 
-    // CAPIBARA
+    // CAPIBARA INICIO
     const capiTex=new THREE.TextureLoader().load('assets/sprites/016_Canotaje_Capibara_v06.png');
     const capiMesh=new THREE.Mesh(new THREE.PlaneGeometry(4,4),new THREE.MeshStandardMaterial({map:capiTex,transparent:true,depthWrite:false,side:THREE.DoubleSide,roughness:0.8}));
     capiMesh.position.set(12,2,-10); scene.add(capiMesh);
+
+    // CAPIBARA META
+    const capiMetaMesh=new THREE.Mesh(new THREE.PlaneGeometry(4,4),new THREE.MeshStandardMaterial({map:capiTex,transparent:true,depthWrite:false,side:THREE.DoubleSide,roughness:0.8}));
+    capiMetaMesh.position.set(metaPt.x+5,2,metaPt.z); scene.add(capiMetaMesh);
 
     // GLOBO
     const bCv=document.createElement('canvas'); bCv.width=512; bCv.height=256;
@@ -254,9 +258,8 @@
       finishScreen.style.display='flex';
       drawBubble('¡Felicitaciones! ¡Llegaste a la meta! 🏆');
       bubbleTex.needsUpdate=true;
-      capiMesh.position.set(metaPt.x+3,2,metaPt.z);
       bubble.visible=true;
-      bubble.position.set(metaPt.x+3,5.5,metaPt.z);
+      bubble.position.set(metaPt.x+5, 4.5, metaPt.z);
     }
     function closestPointOnCurve(px,pz){
       let bestDist=Infinity,bestPt=null;
@@ -413,14 +416,16 @@
 
       capiMesh.position.y=2+Math.sin(t*1.2)*0.15;
       capiMesh.lookAt(rig.position.x,capiMesh.position.y,rig.position.z);
+      capiMetaMesh.position.y=2+Math.sin(t*1.2)*0.15;
+      capiMetaMesh.lookAt(rig.position.x,capiMetaMesh.position.y,rig.position.z);
 
       const dCapi=rig.position.distanceTo(capiMesh.position);
       if(dCapi<8){
         bubble.visible=true;
-        bubble.position.set(capiMesh.position.x,capiMesh.position.y+3.2,capiMesh.position.z);
+        bubble.position.set(capiMesh.position.x, capiMesh.position.y+2.2, capiMesh.position.z);
         bubble.lookAt(rig.position.x,bubble.position.y,rig.position.z);
         bubble.material.opacity=Math.min(1,(8-dCapi)/3);
-      } else bubble.visible=false;
+      } else if(!raceFinished) bubble.visible=false;
 
       sign.lookAt(rig.position.x,sign.position.y,rig.position.z);
       renderer.render(scene,camera);
