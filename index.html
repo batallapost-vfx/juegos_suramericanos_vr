@@ -21,7 +21,7 @@
   </style>
 </head>
 <body>
-  <div id="version">v67</div>
+  <div id="version">v68</div>
   <div id="hud">
     <div id="score-box">⭐ <span id="score">1000</span> pts</div>
     <div id="timer-box">⏱️ <span id="timer">0:00</span></div>
@@ -80,7 +80,7 @@
     rig.add(kayakGroup);
 
     const remoWrapper = new THREE.Group();
-    remoWrapper.position.set(0, -0.3, -0.8);
+    remoWrapper.position.set(0, 0.2, -0.8);
     kayakGroup.add(remoWrapper);
 
     let remoMesh = null; // se asigna cuando carga el GLB
@@ -323,8 +323,8 @@
         // REMO — va al remoWrapper
         loader.load('assets/models/Remo.glb', gltf=>{
           remoMesh=gltf.scene;
-          remoMesh.scale.set(1.6,1.6,1.6);
-          remoMesh.rotation.set(0, Math.PI/2, 0); // 90° en Y — horizontal
+          remoMesh.scale.set(2.2, 2.2, 2.2);
+          remoMesh.rotation.set(0, Math.PI/2, 0);
           remoMesh.traverse(n=>{ if(n.isMesh){ n.castShadow=true; n.material=n.material.clone(); n.material.color.setHex(0xc0186a); n.material.emissive=new THREE.Color(0x3a0020); n.material.emissiveIntensity=0.15; } });
           remoWrapper.add(remoMesh);
           console.log('Remo ✓');
