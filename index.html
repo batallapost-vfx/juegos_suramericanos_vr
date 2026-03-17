@@ -1,36 +1,101 @@
-<!DOCTYPE html>
+// ─── BARCOS CARGUEROS ─────────────────────────────────────────────────────
+    function makeBarco(x, z, largo, ancho, color) {
+      const g = new THREE.Group();
+      const casco = new THREE.Mesh(
+        new THREE.BoxGeometry(largo, 3, ancho),
+        new THREE.MeshStandardMaterial({ color, roughness:0.7, metalness:0.4 })
+      );
+      casco.position.y = 0.5;
+      g.add(casco);
+      // Proa inclinada
+      const proa = new THREE.Mesh(
+        new THREE.CylinderGeometry(0, ancho*0.5, 4, 4),
+        new THREE.MeshStandardMaterial({ color, roughness:0.7 })
+      );
+      proa.rotation.z = -Math.PI/2;
+      proa.position.set(largo*0.5+1, 0.5, 0);
+      g.add(proa);
+      // Superestructura (cabina)
+      const cabina = new THREE.Mesh(
+        new THREE.BoxGeometry(largo*0.22, 5, ancho*0.7),
+        new THREE.MeshStandardMaterial({ color:0xddddcc, roughness:0.5 })
+      );
+      cabina.position.set(-largo*0.28, 4.5, 0);
+      g.add(cabina);
+      // Chimenea
+      const chim = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.6, 0.8, 4, 8),
+        new THREE.MeshStandardMaterial({ color:0x333333 })
+      );
+      chim.position.set(-largo*0.28, 8, 0);
+      g.add(chim);
+      // Contenedores en cubierta
+      const contColors = [0xcc3322, 0x2255aa, 0x228833, 0xddaa22];
+      for(let i=0; i<3; i++){
+        const cont = new THREE.Mesh(
+          new THREE.BoxGeometry(largo*0.18, 3.5, ancho*0.55),
+          new THREE.MeshStandardMaterial({ color:contColors[i%4], roughness:0.8 })
+        );
+        cont.position.set(-largo*0.05 + i*largo*0.18, 3.8, 0);
+        g.add(cont);
+      }
+      g.position.set(x, -1, z);
+      return g;
+    }
+
+    const barcos = [
+      makeBarco(-200, -60,  55, 14, 0x334455),
+      makeBarco(-220, -180, 65, 16, 0x445533),
+      makeBarco(-210, -310, 50, 12, 0x554433),
+    ];
+    barcos.forEach(b => scene.add(b));
+
+    // ─── CAPIBARA (fijo junto a la pista) ─────────────────────────────────────<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <title>Juegos Suramericanos Santa Fe 2026 VR</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #000; overflow: hidden; }
-    canvas { display: block; }
-    #info {
-      position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
-      color: #fff; font-family: Arial, sans-serif; font-size: 14px;
-      background: rgba(0,0,0,0.45); padding: 8px 16px; border-radius: 20px;
-      pointer-events: none; text-align: center;
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:#000; overflow:hidden; }
+    canvas { display:block; }
+    #hud {
+      position:absolute; top:16px; left:50%; transform:translateX(-50%);
+      display:flex; gap:16px; align-items:center; pointer-events:none;
+    }
+    #score-box {
+      background:rgba(0,0,0,0.55); border:2px solid #c0186a;
+      color:#fff; font-family:Arial,sans-serif; font-size:18px; font-weight:bold;
+      padding:8px 20px; border-radius:20px; text-align:center;
+    }
+    #info-box {
+      background:rgba(0,0,0,0.45); color:#fff;
+      font-family:Arial,sans-serif; font-size:13px;
+      padding:8px 16px; border-radius:20px;
+    }
+    #penalty {
+      position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+      color:#ff3333; font-family:Arial,sans-serif; font-size:42px; font-weight:bold;
+      text-shadow:0 0 20px #ff0000; opacity:0; pointer-events:none;
+      transition:opacity 0.1s;
     }
     #vr-btn {
-      position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
-      background: linear-gradient(135deg, #c0186a, #7b2d8b);
-      color: #fff; border: none; padding: 14px 32px;
-      font-size: 16px; border-radius: 30px; cursor: pointer;
-      font-family: Arial, sans-serif; letter-spacing: 1px;
+      position:absolute; bottom:24px; left:50%; transform:translateX(-50%);
+      background:linear-gradient(135deg,#c0186a,#7b2d8b);
+      color:#fff; border:none; padding:14px 32px;
+      font-size:16px; border-radius:30px; cursor:pointer;
+      font-family:Arial,sans-serif; letter-spacing:1px;
     }
-    #vr-btn:hover { opacity: 0.85; }
-    #version {
-      position: absolute; bottom: 8px; right: 12px;
-      color: rgba(255,255,255,0.4); font-family: monospace; font-size: 11px;
-      pointer-events: none;
-    }
+    #version { position:absolute; bottom:8px; right:12px; color:rgba(255,255,255,0.3); font-family:monospace; font-size:11px; pointer-events:none; }
   </style>
 </head>
 <body>
-  <div id="version">v27</div>
-  <div id="info">🖱️ Click + arrastrar: mirar | WASD: mover | Q/E: girar</div>
+  <div id="version">v33</div>
+  <div id="hud">
+    <div id="score-box">⭐ <span id="score">1000</span> pts</div>
+    <div id="info-box">🖱️ Click+arrastrar: mirar | WASD: mover | Q/E: girar</div>
+  </div>
+  <div id="penalty">-10</div>
   <button id="vr-btn">Entrar en VR</button>
 
   <script type="importmap">
@@ -46,381 +111,395 @@
     import * as THREE from 'three';
     import { VRButton } from 'three/addons/webxr/VRButton.js';
 
-    // ─── SCENE ───────────────────────────────────────────────────────────────
+    // ─── ESCENA ───────────────────────────────────────────────────────────────
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x3a2060, 0.007);
+    scene.fog = new THREE.FogExp2(0x3a2060, 0.004);
 
-    // ─── RENDERER ────────────────────────────────────────────────────────────
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const renderer = new THREE.WebGLRenderer({ antialias:true });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.xr.enabled = true;
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 2.2;
     document.body.appendChild(renderer.domElement);
-
     const vrBtn = VRButton.createButton(renderer);
-    vrBtn.style.display = 'none';
-    document.body.appendChild(vrBtn);
-    document.getElementById('vr-btn').addEventListener('click', () => vrBtn.click());
+    vrBtn.style.display='none'; document.body.appendChild(vrBtn);
+    document.getElementById('vr-btn').addEventListener('click',()=>vrBtn.click());
 
-    // ─── CAMERA + RIG ────────────────────────────────────────────────────────
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    // ─── CÁMARA + RIG ─────────────────────────────────────────────────────────
+    const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 2000);
     const rig = new THREE.Group();
     rig.add(camera);
     rig.position.set(0, 2, 20);
     scene.add(rig);
 
-    // ─── SKYBOX HORA MÁGICA ──────────────────────────────────────────────────
-    const skyGeo = new THREE.SphereGeometry(500, 32, 32);
-    const skyMat = new THREE.ShaderMaterial({
-      side: THREE.BackSide,
-      uniforms: {
-        topColor:    { value: new THREE.Color(0x2a1a6e) },
-        midColor:    { value: new THREE.Color(0xd4479a) },
-        horizColor:  { value: new THREE.Color(0xffb347) },
-        bottomColor: { value: new THREE.Color(0xff8c69) },
-      },
-      vertexShader: `
-        varying vec3 vPos;
-        void main() { vPos = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }
-      `,
-      fragmentShader: `
-        uniform vec3 topColor, midColor, horizColor, bottomColor;
-        varying vec3 vPos;
-        void main() {
-          float h = normalize(vPos).y;
-          vec3 col;
-          if (h > 0.3)      col = mix(midColor, topColor, (h - 0.3) / 0.7);
-          else if (h > 0.0) col = mix(horizColor, midColor, h / 0.3);
-          else               col = mix(bottomColor, horizColor, -h * 3.0);
-          gl_FragColor = vec4(col, 1.0);
-        }
-      `
-    });
-    scene.add(new THREE.Mesh(skyGeo, skyMat));
+    // ─── KAYAK DEL USUARIO ────────────────────────────────────────────────────
+    const kayakGroup = new THREE.Group();
+    const kMat  = new THREE.MeshStandardMaterial({ color:0xc0186a, roughness:0.4, metalness:0.2 });
+    const ckMat = new THREE.MeshStandardMaterial({ color:0x7b2d8b, roughness:0.5 });
+    const pMat  = new THREE.MeshStandardMaterial({ color:0xffffff, roughness:0.3 });
+    const mMat  = new THREE.MeshStandardMaterial({ color:0xdddddd, roughness:0.5 });
+    const kBody = new THREE.Mesh(new THREE.CylinderGeometry(0.01,0.38,3.5,12), kMat);
+    kBody.rotation.x = Math.PI/2; kBody.position.set(0,-0.55,-1.2); kayakGroup.add(kBody);
+    const ckpit = new THREE.Mesh(new THREE.TorusGeometry(0.42,0.06,8,24), ckMat);
+    ckpit.rotation.x = Math.PI/2; ckpit.position.set(0,-0.28,0.4); kayakGroup.add(ckpit);
+    const remo = new THREE.Group();
+    const rmng = new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,2.4,8), mMat);
+    rmng.rotation.z = Math.PI/2; remo.add(rmng);
+    [-1.2,1.2].forEach(x=>{ const p=new THREE.Mesh(new THREE.BoxGeometry(0.18,0.44,0.03),pMat); p.position.set(x,0,0); p.rotation.z=x>0?0.18:-0.18; remo.add(p); });
+    remo.position.set(0,-0.25,-0.1); kayakGroup.add(remo);
+    kayakGroup.position.set(0,-0.5,-1.0);
+    rig.add(kayakGroup);
 
-    // ─── SOL ─────────────────────────────────────────────────────────────────
-    const sunSphere = new THREE.Mesh(
-      new THREE.SphereGeometry(8, 16, 16),
-      new THREE.MeshBasicMaterial({ color: 0xffe066 })
+    // ─── SKYBOX ───────────────────────────────────────────────────────────────
+    scene.add(new THREE.Mesh(new THREE.SphereGeometry(1000,32,32), new THREE.ShaderMaterial({
+      side:THREE.BackSide,
+      uniforms:{ tc:{value:new THREE.Color(0x2a1a6e)}, mc:{value:new THREE.Color(0xd4479a)}, hc:{value:new THREE.Color(0xffb347)}, bc:{value:new THREE.Color(0xff8c69)} },
+      vertexShader:`varying vec3 vP; void main(){ vP=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+      fragmentShader:`uniform vec3 tc,mc,hc,bc; varying vec3 vP;
+        void main(){ float h=normalize(vP).y; vec3 c;
+          if(h>0.3) c=mix(mc,tc,(h-0.3)/0.7);
+          else if(h>0.0) c=mix(hc,mc,h/0.3);
+          else c=mix(bc,hc,-h*3.0);
+          gl_FragColor=vec4(c,1.0); }`
+    })));
+
+
+
+    // Luces
+    scene.add(new THREE.AmbientLight(0xffccee,1.4));
+    const sunL = new THREE.DirectionalLight(0xffaa66,2.2);
+    sunL.position.set(-80,18,-300); sunL.castShadow=true; scene.add(sunL);
+
+    // ─── CURVA DEL RÍO (spline de control) ───────────────────────────────────
+    // Puntos de control: el río va curveando suavemente
+    const curvePts = [
+      new THREE.Vector3(  0, 0,  30),
+      new THREE.Vector3(  8, 0,   0),
+      new THREE.Vector3( -6, 0, -40),
+      new THREE.Vector3( 10, 0, -80),
+      new THREE.Vector3( -8, 0,-120),
+      new THREE.Vector3(  4, 0,-160),
+      new THREE.Vector3(-10, 0,-200),
+      new THREE.Vector3(  6, 0,-240),
+      new THREE.Vector3( -4, 0,-280),
+      new THREE.Vector3(  8, 0,-320),
+      new THREE.Vector3( -6, 0,-360),
+      new THREE.Vector3(  0, 0,-400),
+    ];
+    const trackCurve = new THREE.CatmullRomCurve3(curvePts);
+
+    // ─── BOYAS SIGUIENDO LA CURVA ─────────────────────────────────────────────
+    const GATE_COUNT = 40;
+    const GATE_WIDTH = 6; // semiancho entre boyas
+    const gates = []; // { left, right, passed, z }
+    const boyaMatR = new THREE.MeshStandardMaterial({ color:0xe8521a, roughness:0.4, emissive:0xe8521a, emissiveIntensity:0.2 });
+    const boyaMatY = new THREE.MeshStandardMaterial({ color:0xffe033, roughness:0.4, emissive:0xffe033, emissiveIntensity:0.2 });
+
+    for(let i=0; i<GATE_COUNT; i++){
+      const t = i / (GATE_COUNT-1);
+      const pt = trackCurve.getPoint(t);
+      // Tangente para orientar el gate perpendicular a la curva
+      const tan = trackCurve.getTangent(t);
+      const perp = new THREE.Vector3(-tan.z, 0, tan.x).normalize();
+
+      const lPos = pt.clone().addScaledVector(perp,  GATE_WIDTH);
+      const rPos = pt.clone().addScaledVector(perp, -GATE_WIDTH);
+
+      const bL = new THREE.Mesh(new THREE.SphereGeometry(0.4,8,8), boyaMatR);
+      const bR = new THREE.Mesh(new THREE.SphereGeometry(0.4,8,8), boyaMatY);
+      bL.position.set(lPos.x, 0.4, lPos.z);
+      bR.position.set(rPos.x, 0.4, rPos.z);
+      scene.add(bL); scene.add(bR);
+
+      // Palito de boya
+      [lPos,rPos].forEach(p=>{
+        const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,1.2,6), new THREE.MeshStandardMaterial({color:0xffffff}));
+        stick.position.set(p.x,0,p.z); scene.add(stick);
+      });
+
+      gates.push({ left:lPos, right:rPos, center:pt.clone(), passed:false });
+    }
+
+    // ─── RÍO PARANÁ (extendido) ───────────────────────────────────────────────
+    const river = new THREE.Mesh(
+      new THREE.PlaneGeometry(300,1200,80,80),
+      new THREE.MeshStandardMaterial({ color:0x6aa0b8, roughness:0.15, metalness:0.5, transparent:true, opacity:0.9 })
     );
-    sunSphere.position.set(-80, 18, -300);
-    scene.add(sunSphere);
-    const haloMat = new THREE.MeshBasicMaterial({ color: 0xff7799, transparent: true, opacity: 0.13, side: THREE.DoubleSide });
-    const halo = new THREE.Mesh(new THREE.CircleGeometry(22, 32), haloMat);
-    halo.position.copy(sunSphere.position);
-    halo.lookAt(0, 2, 0);
-    scene.add(halo);
-
-    // ─── LIGHTS ──────────────────────────────────────────────────────────────
-    scene.add(new THREE.AmbientLight(0xffccee, 1.4));
-    const sun = new THREE.DirectionalLight(0xffaa66, 2.2);
-    sun.position.set(-80, 18, -300);
-    sun.castShadow = true;
-    sun.shadow.mapSize.set(2048, 2048);
-    sun.shadow.camera.near = 1;
-    sun.shadow.camera.far = 600;
-    sun.shadow.camera.left = -200;
-    sun.shadow.camera.right = 200;
-    sun.shadow.camera.top = 100;
-    sun.shadow.camera.bottom = -100;
-    scene.add(sun);
-    const fillLight = new THREE.DirectionalLight(0xff6644, 0.3);
-    fillLight.position.set(0, -10, 0);
-    scene.add(fillLight);
-
-    // ─── RÍO PARANÁ ──────────────────────────────────────────────────────────
-    const RIVER_WIDTH = 300;
-    const RIVER_LENGTH = 800;
-    const riverGeo = new THREE.PlaneGeometry(RIVER_WIDTH, RIVER_LENGTH, 80, 80);
-    const pos = riverGeo.attributes.position;
-    for (let i = 0; i < pos.count; i++) {
-      pos.setZ(i, (Math.random() - 0.5) * 0.08);
-    }
-    riverGeo.computeVertexNormals();
-    const colors = [];
-    for (let i = 0; i < pos.count; i++) {
-      const x = (pos.getX(i) / RIVER_WIDTH) + 0.5;
-      const r = 0.3 + x * 0.25 + Math.random() * 0.03;
-      const g = 0.45 + x * 0.1  + Math.random() * 0.03;
-      const b = 0.55 + (1 - x) * 0.2 + Math.random() * 0.03;
-      colors.push(r, g, b);
-    }
-    riverGeo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-    const riverMat = new THREE.MeshStandardMaterial({
-      color: 0x6aa0b8, roughness: 0.15, metalness: 0.5,
-      transparent: true, opacity: 0.9, vertexColors: true,
-    });
-    const river = new THREE.Mesh(riverGeo, riverMat);
-    river.rotation.x = -Math.PI / 2;
-    river.position.set(0, -0.1, -180);
-    river.receiveShadow = true;
+    river.rotation.x = -Math.PI/2;
+    river.position.set(0,-0.1,-400);
     scene.add(river);
 
-    // ─── ORILLAS ─────────────────────────────────────────────────────────────
-    const bankMat = new THREE.MeshStandardMaterial({ color: 0x6b8c3a, roughness: 0.9 });
-    const bankMatDirt = new THREE.MeshStandardMaterial({ color: 0x8a6a3a, roughness: 1 });
-    const bankR = new THREE.Mesh(new THREE.BoxGeometry(60, 1.5, 800), bankMat);
-    bankR.position.set(180, -0.5, -180);
-    bankR.receiveShadow = true;
-    scene.add(bankR);
-    const bankL = new THREE.Mesh(new THREE.BoxGeometry(80, 1.5, 800), bankMat);
-    bankL.position.set(-190, -0.5, -180);
-    bankL.receiveShadow = true;
-    scene.add(bankL);
-    const beach = new THREE.Mesh(new THREE.PlaneGeometry(300, 30), bankMatDirt);
-    beach.rotation.x = -Math.PI / 2;
-    beach.position.set(0, -0.05, 30);
-    scene.add(beach);
+    // Orillas extendidas
+    const bkMat = new THREE.MeshStandardMaterial({ color:0x6b8c3a, roughness:0.9 });
+    const bR2 = new THREE.Mesh(new THREE.BoxGeometry(80,1.5,1200), bkMat); bR2.position.set(190,-0.5,-400); scene.add(bR2);
+    const bL2 = new THREE.Mesh(new THREE.BoxGeometry(80,1.5,1200), bkMat); bL2.position.set(-190,-0.5,-400); scene.add(bL2);
+    const beach = new THREE.Mesh(new THREE.PlaneGeometry(300,30), new THREE.MeshStandardMaterial({color:0x8a6a3a}));
+    beach.rotation.x=-Math.PI/2; beach.position.set(0,-0.05,30); scene.add(beach);
 
-    // ─── ÁRBOLES GLB ─────────────────────────────────────────────────────────
-    const treePositions = [
-      [155,0,-10],[162,0,-30],[150,0,-50],[158,0,-70],[153,0,-90],
-      [160,0,-110],[155,0,-130],[162,0,-150],[150,0,-170],[157,0,-190],
-      [-155,0,-10],[-162,0,-30],[-150,0,-50],[-158,0,-70],[-153,0,-90],
-      [-160,0,-110],[-155,0,-130],[-162,0,-150],[-150,0,-170],[-157,0,-190],
-    ];
-    (async () => {
+    // ─── ÁRBOLES GLB (solo costa derecha) ────────────────────────────────────
+    const treePosArr = [];
+    for(let z=10; z>-780; z-=18){
+      treePosArr.push([155+Math.random()*10, 0, z+Math.random()*6]);
+      treePosArr.push([168+Math.random()*10, 0, z+Math.random()*6]);
+    }
+    (async()=>{
       try {
         const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
         const loader = new GLTFLoader();
-        loader.load('assets/models/arbol 01.glb', (gltf) => {
-          treePositions.forEach(([x, y, z]) => {
-            const tree = gltf.scene.clone();
-            const s = 3 + Math.random() * 2;
-            tree.scale.set(s, s, s);
-            tree.position.set(x + (Math.random()-0.5)*6, y, z + (Math.random()-0.5)*6);
-            tree.rotation.y = Math.random() * Math.PI * 2;
-            tree.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
-            scene.add(tree);
+        loader.load('assets/models/arbol 01.glb', gltf=>{
+          treePosArr.forEach(([x,y,z])=>{
+            const tr=gltf.scene.clone(), s=3+Math.random()*2;
+            tr.scale.set(s,s,s); tr.position.set(x,y,z);
+            tr.rotation.y=Math.random()*Math.PI*2;
+            tr.traverse(n=>{ if(n.isMesh){ n.castShadow=true; n.receiveShadow=true; } });
+            scene.add(tr);
           });
-          console.log('Árboles GLB cargados ✓');
-        }, undefined, err => console.warn('GLB no cargó, usando árboles geométricos:', err));
-      } catch(e) {
-        console.warn('GLTFLoader no disponible:', e);
-      }
+          console.log('Árboles ✓');
+        }, undefined, err=>console.warn('GLB err:',err));
+      } catch(e){ console.warn('GLTFLoader no disp:',e); }
     })();
 
-    // ─── PUENTE ROSARIO-VICTORIA ──────────────────────────────────────────────
-    const BRIDGE_Z = -120;
-    const bridgeMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.4, metalness: 0.6 });
-    const cableMat  = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, roughness: 0.3, metalness: 0.7 });
-    const pillarMat = new THREE.MeshStandardMaterial({ color: 0xbbbbbb, roughness: 0.5, metalness: 0.5 });
-    const roadMat   = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.9 });
-
-    const deck = new THREE.Mesh(new THREE.BoxGeometry(320, 0.6, 14), roadMat);
-    deck.position.set(0, 12, BRIDGE_Z);
-    deck.castShadow = true;
-    scene.add(deck);
-
-    [-6.5, 6.5].forEach(z => {
-      const rail = new THREE.Mesh(new THREE.BoxGeometry(320, 0.3, 0.3), bridgeMat);
-      rail.position.set(0, 12.6, BRIDGE_Z + z);
-      scene.add(rail);
-    });
-
-    [-60, 60].forEach(x => {
-      const tower = new THREE.Mesh(new THREE.BoxGeometry(3, 45, 3), pillarMat);
-      tower.position.set(x, 22, BRIDGE_Z);
-      tower.castShadow = true;
-      scene.add(tower);
-      const base = new THREE.Mesh(new THREE.CylinderGeometry(4, 5, 6, 8), pillarMat);
-      base.position.set(x, -2, BRIDGE_Z);
-      scene.add(base);
-      const towerTop = new THREE.Vector3(x, 44, BRIDGE_Z);
-      [-30, -15, 0, 15, 30].map(dx => new THREE.Vector3(x + (x > 0 ? dx : -dx), 12.3, BRIDGE_Z))
-        .forEach(anchor => {
-          const dir = new THREE.Vector3().subVectors(anchor, towerTop);
-          const len = dir.length();
-          const mid = new THREE.Vector3().addVectors(towerTop, anchor).multiplyScalar(0.5);
-          const cable = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, len, 4), cableMat);
-          cable.position.copy(mid);
-          cable.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dir.clone().normalize());
-          scene.add(cable);
-        });
-    });
-
-    for (let x = -150; x <= 150; x += 30) {
-      if (Math.abs(x) === 60) continue;
-      const pil = new THREE.Mesh(new THREE.CylinderGeometry(1, 1.3, 14, 8), pillarMat);
-      pil.position.set(x, 5.7, BRIDGE_Z);
-      pil.castShadow = true;
-      scene.add(pil);
-    }
-
-    // ─── BOYAS ───────────────────────────────────────────────────────────────
-    const boyaMat  = new THREE.MeshStandardMaterial({ color: 0xe8521a, roughness: 0.4 });
-    const boyaMatY = new THREE.MeshStandardMaterial({ color: 0xffe033, roughness: 0.4 });
-    for (let z = 40; z > -100; z -= 18) {
-      [-8, 8].forEach((x, i) => {
-        const b = new THREE.Mesh(new THREE.SphereGeometry(0.35, 8, 8), i === 0 ? boyaMat : boyaMatY);
-        b.position.set(x, 0.35, z);
-        scene.add(b);
+    // ─── PUENTE ───────────────────────────────────────────────────────────────
+    const BRIDGE_Z=-120;
+    const stMat=new THREE.MeshStandardMaterial({color:0xbbbbbb,roughness:0.5,metalness:0.5});
+    const cbMat=new THREE.MeshStandardMaterial({color:0xaaaaaa,roughness:0.3,metalness:0.7});
+    const dk=new THREE.Mesh(new THREE.BoxGeometry(400,0.6,14),new THREE.MeshStandardMaterial({color:0x555555}));
+    dk.position.set(0,12,BRIDGE_Z); scene.add(dk);
+    [-6.5,6.5].forEach(z=>{ const r=new THREE.Mesh(new THREE.BoxGeometry(400,0.3,0.3),stMat); r.position.set(0,12.6,BRIDGE_Z+z); scene.add(r); });
+    [-70,70].forEach(x=>{
+      const tw=new THREE.Mesh(new THREE.BoxGeometry(3,45,3),stMat); tw.position.set(x,22,BRIDGE_Z); scene.add(tw);
+      const bs=new THREE.Mesh(new THREE.CylinderGeometry(4,5,6,8),stMat); bs.position.set(x,-2,BRIDGE_Z); scene.add(bs);
+      const top=new THREE.Vector3(x,44,BRIDGE_Z);
+      [-35,-18,0,18,35].forEach(dx=>{
+        const anc=new THREE.Vector3(x+(x>0?dx:-dx),12.3,BRIDGE_Z);
+        const dir=new THREE.Vector3().subVectors(anc,top);
+        const mid=new THREE.Vector3().addVectors(top,anc).multiplyScalar(0.5);
+        const cab=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,dir.length(),4),cbMat);
+        cab.position.copy(mid);
+        cab.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.clone().normalize());
+        scene.add(cab);
       });
+    });
+    for(let x=-190;x<=190;x+=30){
+      if(Math.abs(x)===70) continue;
+      const pl=new THREE.Mesh(new THREE.CylinderGeometry(1,1.3,14,8),stMat); pl.position.set(x,5.7,BRIDGE_Z); scene.add(pl);
     }
 
-    // ─── CAPIBARA PNG ────────────────────────────────────────────────────────
-    const capiTex = new THREE.TextureLoader().load('assets/sprites/016_Canotaje_Capibara_v06.png');
-    const capiMesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(4, 4),
-      new THREE.MeshStandardMaterial({ map: capiTex, transparent: true, depthWrite: false, side: THREE.DoubleSide, roughness: 0.8, metalness: 0.0 })
-    );
-    capiMesh.position.set(0, 2, 5);
+    // Segunda estructura lejana (simplificada)
+    const BRIDGE2_Z = -340;
+    const dk2=new THREE.Mesh(new THREE.BoxGeometry(400,0.5,10),new THREE.MeshStandardMaterial({color:0x444444}));
+    dk2.position.set(0,10,BRIDGE2_Z); scene.add(dk2);
+    [-60,60].forEach(x=>{
+      const tw=new THREE.Mesh(new THREE.BoxGeometry(2.5,35,2.5),stMat); tw.position.set(x,17,BRIDGE2_Z); scene.add(tw);
+    });
+
+    // ─── CIUDAD A LA IZQUIERDA ────────────────────────────────────────────────
+    const buildMats = [
+      new THREE.MeshStandardMaterial({ color:0x8899bb, roughness:0.6, metalness:0.3 }),
+      new THREE.MeshStandardMaterial({ color:0x7788aa, roughness:0.7, metalness:0.2 }),
+      new THREE.MeshStandardMaterial({ color:0x99aabb, roughness:0.5, metalness:0.4 }),
+      new THREE.MeshStandardMaterial({ color:0xaabbcc, roughness:0.6, metalness:0.3 }),
+    ];
+    const buildings = [
+      // Frente del río — primera línea más alta
+      [-215,-10,  22,16, 55], [-240,-10, 14,12, 38], [-262,-10, 12,10, 70],[-280,-10,10,10,42],
+      [-215,-45,  18,14, 42], [-240,-45, 20,16, 65], [-265,-45, 14,12, 30],[-285,-45,12,10,58],
+      [-215,-85,  22,16, 50], [-242,-85, 14,12, 75], [-265,-85, 16,14, 44],[-285,-85,10, 8,35],
+      [-215,-125, 18,14, 38], [-240,-125,22,18, 62], [-268,-125,14,12, 48],[-288,-125,12,10,72],
+      [-215,-165, 20,16, 52], [-242,-165,14,12, 68], [-265,-165,18,14, 36],[-285,-165,10, 8,55],
+      [-215,-205, 22,16, 45], [-244,-205,16,14, 78], [-268,-205,14,12, 40],[-288,-205,12,10,62],
+      [-215,-245, 18,14, 48], [-240,-245,20,16, 58], [-265,-245,14,12, 35],[-285,-245,10, 8,70],
+      [-215,-285, 22,18, 55], [-244,-285,14,12, 42], [-267,-285,16,14, 66],[-287,-285,12,10,38],
+      [-215,-325, 18,14, 60], [-240,-325,22,16, 48], [-265,-325,14,12, 72],[-285,-325,10, 8,44],
+      [-215,-365, 20,16, 40], [-242,-365,16,14, 65], [-266,-365,18,14, 50],[-286,-365,12,10,55],
+      // Segunda fila — más atrás y más baja
+      [-305,-20,  16,14, 28], [-325,-20, 12,10, 36], [-345,-20, 14,12, 22],
+      [-305,-70,  14,12, 32], [-328,-70, 16,14, 44], [-350,-70, 10, 8, 26],
+      [-305,-130, 18,14, 38], [-328,-130,14,12, 28], [-350,-130,12,10, 42],
+      [-305,-190, 16,14, 30], [-325,-190,18,16, 46], [-348,-190,12,10, 24],
+      [-305,-250, 14,12, 36], [-326,-250,16,14, 52], [-350,-250,10, 8, 30],
+      [-305,-310, 18,16, 40], [-328,-310,14,12, 26], [-350,-310,12,10, 48],
+      [-305,-370, 16,14, 34], [-326,-370,18,16, 44], [-350,-370,10, 8, 28],
+    ];
+    buildings.forEach(([x,z,w,d,h],i)=>{
+      const mat = buildMats[i%buildMats.length];
+      const building = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat);
+      building.position.set(x, h/2-0.5, z);
+      building.castShadow = true;
+      scene.add(building);
+      // Ventanitas con emissive
+      const winMat = new THREE.MeshStandardMaterial({ color:0xffee99, emissive:0xffcc44, emissiveIntensity:0.4+Math.random()*0.4 });
+      for(let wy=4; wy<h-4; wy+=6){
+        for(let wx=-w/2+3; wx<w/2-2; wx+=4){
+          const win = new THREE.Mesh(new THREE.PlaneGeometry(1.5,2), winMat);
+          win.position.set(x+wx, wy, z+d/2+0.1);
+          scene.add(win);
+        }
+      }
+    });
+
+    // ─── CAPIBARA (fijo junto a la pista) ─────────────────────────────────────
+    const capiTex=new THREE.TextureLoader().load('assets/sprites/016_Canotaje_Capibara_v06.png');
+    const capiMesh=new THREE.Mesh(new THREE.PlaneGeometry(4,4),
+      new THREE.MeshStandardMaterial({map:capiTex,transparent:true,depthWrite:false,side:THREE.DoubleSide,roughness:0.8}));
+    // Lo ponemos al inicio de la pista, sobre el agua
+    capiMesh.position.set(12, 2, -10);
     scene.add(capiMesh);
 
-    // ─── GLOBO DE DIÁLOGO ────────────────────────────────────────────────────
-    const bubbleCanvas = document.createElement('canvas');
-    bubbleCanvas.width = 512; bubbleCanvas.height = 256;
-    const bCtx = bubbleCanvas.getContext('2d');
-
-    function drawBubble(text) {
-      bCtx.clearRect(0, 0, 512, 256);
-      // Fondo blanco redondeado
-      bCtx.fillStyle = 'rgba(255,255,255,0.92)';
-      bCtx.beginPath();
-      bCtx.roundRect(10, 10, 492, 190, 24);
-      bCtx.fill();
-      // Borde magenta
-      bCtx.strokeStyle = '#c0186a';
-      bCtx.lineWidth = 4;
-      bCtx.beginPath();
-      bCtx.roundRect(10, 10, 492, 190, 24);
-      bCtx.stroke();
-      // Colita del globo (apunta hacia abajo)
-      bCtx.fillStyle = 'rgba(255,255,255,0.92)';
-      bCtx.beginPath();
-      bCtx.moveTo(220, 196); bCtx.lineTo(256, 246); bCtx.lineTo(292, 196);
-      bCtx.fill();
-      bCtx.strokeStyle = '#c0186a';
-      bCtx.lineWidth = 4;
-      bCtx.beginPath();
-      bCtx.moveTo(222, 196); bCtx.lineTo(256, 244); bCtx.lineTo(290, 196);
-      bCtx.stroke();
-      // Texto
-      bCtx.fillStyle = '#3a003a';
-      bCtx.font = 'bold 28px Arial';
-      bCtx.textAlign = 'center';
-      // Wrap de texto
-      const words = text.split(' ');
-      let line = '', y = 70, lineH = 38;
-      for (const w of words) {
-        const test = line + w + ' ';
-        if (bCtx.measureText(test).width > 440 && line) {
-          bCtx.fillText(line.trim(), 256, y); line = w + ' '; y += lineH;
-        } else line = test;
-      }
-      bCtx.fillText(line.trim(), 256, y);
+    // ─── GLOBO ────────────────────────────────────────────────────────────────
+    const bCv=document.createElement('canvas'); bCv.width=512; bCv.height=256;
+    const bCtx=bCv.getContext('2d');
+    function drawBubble(text){
+      bCtx.clearRect(0,0,512,256);
+      bCtx.fillStyle='rgba(255,255,255,0.92)'; bCtx.beginPath(); bCtx.roundRect(10,10,492,190,24); bCtx.fill();
+      bCtx.strokeStyle='#c0186a'; bCtx.lineWidth=4; bCtx.beginPath(); bCtx.roundRect(10,10,492,190,24); bCtx.stroke();
+      bCtx.fillStyle='rgba(255,255,255,0.92)'; bCtx.beginPath(); bCtx.moveTo(220,196); bCtx.lineTo(256,246); bCtx.lineTo(292,196); bCtx.fill();
+      bCtx.strokeStyle='#c0186a'; bCtx.lineWidth=4; bCtx.beginPath(); bCtx.moveTo(222,196); bCtx.lineTo(256,244); bCtx.lineTo(290,196); bCtx.stroke();
+      bCtx.fillStyle='#3a003a'; bCtx.font='bold 26px Arial'; bCtx.textAlign='center';
+      const words=text.split(' '); let line='',y=65;
+      for(const w of words){ const tst=line+w+' '; if(bCtx.measureText(tst).width>440&&line){ bCtx.fillText(line.trim(),256,y); line=w+' '; y+=36; } else line=tst; }
+      bCtx.fillText(line.trim(),256,y);
     }
+    drawBubble('¡Seguí la pista! ¡Pasá entre las boyas!');
+    const bubbleTex=new THREE.CanvasTexture(bCv);
+    const bubble=new THREE.Mesh(new THREE.PlaneGeometry(3,1.5),
+      new THREE.MeshBasicMaterial({map:bubbleTex,transparent:true,depthWrite:false,side:THREE.DoubleSide}));
+    bubble.visible=false; scene.add(bubble);
 
-    drawBubble('¡Vamos los Juegos Suramericanos Santa Fe 2026!');
-    const bubbleTex = new THREE.CanvasTexture(bubbleCanvas);
-    const bubble = new THREE.Mesh(
-      new THREE.PlaneGeometry(3, 1.5),
-      new THREE.MeshBasicMaterial({ map: bubbleTex, transparent: true, depthWrite: false, side: THREE.DoubleSide })
-    );
-    bubble.visible = false;
-    scene.add(bubble);
-    const c2d = document.createElement('canvas');
-    c2d.width = 512; c2d.height = 128;
-    const ctx = c2d.getContext('2d');
-    const grad = ctx.createLinearGradient(0, 0, 512, 0);
-    grad.addColorStop(0, '#c0186a'); grad.addColorStop(0.5, '#7b2d8b'); grad.addColorStop(1, '#e8521a');
-    ctx.fillStyle = grad;
-    ctx.roundRect(0, 0, 512, 128, 20); ctx.fill();
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 28px Arial'; ctx.textAlign = 'center';
-    ctx.fillText('JUEGOS SURAMERICANOS', 256, 50);
-    ctx.font = 'bold 22px Arial';
-    ctx.fillText('SANTA FE 2026', 256, 90);
-    const signTex = new THREE.CanvasTexture(c2d);
-    const sign = new THREE.Mesh(
-      new THREE.PlaneGeometry(5, 1.25),
-      new THREE.MeshBasicMaterial({ map: signTex, transparent: true })
-    );
-    sign.position.set(0, 5, 10);
-    scene.add(sign);
+    // ─── CARTEL ───────────────────────────────────────────────────────────────
+    const c2d=document.createElement('canvas'); c2d.width=512; c2d.height=128;
+    const ctx=c2d.getContext('2d');
+    const gr=ctx.createLinearGradient(0,0,512,0);
+    gr.addColorStop(0,'#c0186a'); gr.addColorStop(0.5,'#7b2d8b'); gr.addColorStop(1,'#e8521a');
+    ctx.fillStyle=gr; ctx.roundRect(0,0,512,128,20); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.font='bold 28px Arial'; ctx.textAlign='center';
+    ctx.fillText('JUEGOS SURAMERICANOS',256,50); ctx.font='bold 22px Arial'; ctx.fillText('SANTA FE 2026',256,90);
+    const sign=new THREE.Mesh(new THREE.PlaneGeometry(5,1.25),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c2d),transparent:true}));
+    sign.position.set(0,5,10); scene.add(sign);
 
-    // ─── INPUT ───────────────────────────────────────────────────────────────
-    const keys = {};
-    window.addEventListener('keydown', e => keys[e.code] = true);
-    window.addEventListener('keyup',   e => keys[e.code] = false);
-
-    let mouseDragging = false, lastMX = 0, lastMY = 0, camYaw = 0, camPitch = 0;
-    renderer.domElement.addEventListener('mousedown', e => { mouseDragging = true; lastMX = e.clientX; lastMY = e.clientY; });
-    window.addEventListener('mouseup', () => mouseDragging = false);
-    window.addEventListener('mousemove', e => {
-      if (!mouseDragging || renderer.xr.isPresenting) return;
-      camYaw   -= (e.clientX - lastMX) * 0.003;
-      camPitch -= (e.clientY - lastMY) * 0.003;
-      camPitch  = Math.max(-Math.PI/3, Math.min(Math.PI/3, camPitch));
-      lastMX = e.clientX; lastMY = e.clientY;
-      camera.rotation.order = 'YXZ';
-      camera.rotation.y = camYaw;
-      camera.rotation.x = camPitch;
+    // ─── INPUT ────────────────────────────────────────────────────────────────
+    const keys={};
+    window.addEventListener('keydown',e=>keys[e.code]=true);
+    window.addEventListener('keyup',  e=>keys[e.code]=false);
+    let drag=false,lx=0,ly=0,camYaw=0,camPitch=0;
+    renderer.domElement.addEventListener('mousedown',e=>{ drag=true; lx=e.clientX; ly=e.clientY; });
+    window.addEventListener('mouseup',()=>drag=false);
+    window.addEventListener('mousemove',e=>{
+      if(!drag||renderer.xr.isPresenting) return;
+      camYaw-=(e.clientX-lx)*0.003; camPitch-=(e.clientY-ly)*0.003;
+      camPitch=Math.max(-Math.PI/3,Math.min(Math.PI/3,camPitch));
+      lx=e.clientX; ly=e.clientY;
+      camera.rotation.order='YXZ'; camera.rotation.y=camYaw; camera.rotation.x=camPitch;
     });
 
-    const input = { moveX: 0, moveZ: 0, turnX: 0 };
+    // ─── SCORING ──────────────────────────────────────────────────────────────
+    let score = 1000;
+    let penaltyCooldown = 0;
+    let inPenalty = false;
+    const scoreEl  = document.getElementById('score');
+    const penaltyEl = document.getElementById('penalty');
 
-    // ─── LOOP ────────────────────────────────────────────────────────────────
-    const clock = new THREE.Clock();
-    let t = 0;
+    function showPenalty(){
+      penaltyEl.style.opacity='1';
+      setTimeout(()=>penaltyEl.style.opacity='0', 600);
+    }
 
-    renderer.setAnimationLoop(() => {
-      const dt = clock.getDelta();
-      t += dt;
+    // Proyección de punto sobre segmento para detectar si pasó el gate
+    function pointOnSegmentT(px, pz, ax, az, bx, bz){
+      const dx=bx-ax, dz=bz-az;
+      const len2=dx*dx+dz*dz;
+      return ((px-ax)*dx+(pz-az)*dz)/len2;
+    }
+    function sideOfLine(px,pz,ax,az,bx,bz){
+      return (bx-ax)*(pz-az)-(bz-az)*(px-ax);
+    }
 
-      if (renderer.xr.isPresenting) {
-        for (const src of renderer.xr.getSession().inputSources) {
-          const gp = src.gamepad;
-          if (!gp) continue;
-          if (src.handedness === 'left') {
-            input.moveX = Math.abs(gp.axes[2]) > 0.15 ? gp.axes[2] : 0;
-            input.moveZ = Math.abs(gp.axes[3]) > 0.15 ? gp.axes[3] : 0;
-          } else {
-            input.turnX = Math.abs(gp.axes[2]) > 0.15 ? gp.axes[2] : 0;
+    // ─── LOOP ─────────────────────────────────────────────────────────────────
+    const clock=new THREE.Clock();
+    let t=0, remoT=0;
+    const input={moveX:0,moveZ:0,turnX:0};
+
+    renderer.setAnimationLoop(()=>{
+      const dt=clock.getDelta(); t+=dt;
+      penaltyCooldown=Math.max(0,penaltyCooldown-dt);
+
+      // Gamepads XR
+      if(renderer.xr.isPresenting){
+        for(const src of renderer.xr.getSession().inputSources){
+          const gp=src.gamepad; if(!gp) continue;
+          if(src.handedness==='left'){ input.moveX=Math.abs(gp.axes[2])>0.15?gp.axes[2]:0; input.moveZ=Math.abs(gp.axes[3])>0.15?gp.axes[3]:0; }
+          else input.turnX=Math.abs(gp.axes[2])>0.15?gp.axes[2]:0;
+        }
+      }
+      input.moveZ=keys['KeyW']||keys['ArrowUp']?-1:keys['KeyS']||keys['ArrowDown']?1:renderer.xr.isPresenting?input.moveZ:0;
+      input.moveX=keys['KeyA']||keys['ArrowLeft']?-1:keys['KeyD']||keys['ArrowRight']?1:renderer.xr.isPresenting?input.moveX:0;
+      input.turnX=keys['KeyQ']?-1:keys['KeyE']?1:renderer.xr.isPresenting?input.turnX:0;
+
+      const yaw=rig.rotation.y;
+      rig.position.x+=(Math.cos(yaw)*input.moveX-Math.sin(yaw)*input.moveZ)*8*dt;
+      rig.position.z+=(Math.sin(yaw)*input.moveX+Math.cos(yaw)*input.moveZ)*8*dt;
+      rig.rotation.y-=input.turnX*1.5*dt;
+
+      // Remos
+      const moving=input.moveZ!==0||input.moveX!==0;
+      if(moving) remoT+=dt*3.5;
+      remo.rotation.x=Math.sin(remoT)*0.5;
+      remo.rotation.z=Math.sin(remoT*0.5)*0.08;
+      kayakGroup.rotation.z=Math.sin(remoT*0.5)*(moving?0.025:0);
+
+      // Boyas — animación leve
+      river.position.y=-0.1+Math.sin(t*0.4)*0.04;
+
+      // ── Detección de gates ──
+      const px=rig.position.x, pz=rig.position.z;
+      for(const gate of gates){
+        if(gate.passed) continue;
+        const lx=gate.left.x, lz=gate.left.z;
+        const rx=gate.right.x, rz=gate.right.z;
+        // Centro del gate
+        const cx=(lx+rx)/2, cz=(lz+rz)/2;
+        // ¿Pasó la línea del gate?
+        const dist=Math.sqrt((px-cx)**2+(pz-cz)**2);
+        if(dist < GATE_WIDTH+2){
+          gate.passed=true;
+          // ¿Estaba dentro de las boyas?
+          // Proyectamos el jugador sobre el segmento izq-der
+          const tVal=pointOnSegmentT(px,pz,lx,lz,rx,rz);
+          if(tVal<0.05||tVal>0.95){
+            // Pasó por afuera
+            if(penaltyCooldown<=0){
+              score=Math.max(0,score-10);
+              scoreEl.textContent=score;
+              showPenalty();
+              penaltyCooldown=1.5;
+            }
           }
         }
       }
 
-      input.moveZ = keys['KeyW']||keys['ArrowUp']    ? -1 : keys['KeyS']||keys['ArrowDown']  ?  1 : renderer.xr.isPresenting ? input.moveZ : 0;
-      input.moveX = keys['KeyA']||keys['ArrowLeft']  ? -1 : keys['KeyD']||keys['ArrowRight'] ?  1 : renderer.xr.isPresenting ? input.moveX : 0;
-      input.turnX = keys['KeyQ'] ? -1 : keys['KeyE'] ? 1 : renderer.xr.isPresenting ? input.turnX : 0;
-
-      const yaw = rig.rotation.y;
-      rig.position.x += (Math.cos(yaw) * input.moveX - Math.sin(yaw) * input.moveZ) * 8 * dt;
-      rig.position.z += (Math.sin(yaw) * input.moveX + Math.cos(yaw) * input.moveZ) * 8 * dt;
-      rig.rotation.y -= input.turnX * 1.5 * dt;
-
-      // Globo de diálogo — aparece cuando el usuario está cerca del capi
-      const distCapi = rig.position.distanceTo(capiMesh.position);
-      if (distCapi < 8) {
-        bubble.visible = true;
-        bubble.position.set(capiMesh.position.x, capiMesh.position.y + 3.2, capiMesh.position.z);
-        bubble.lookAt(rig.position.x, bubble.position.y, rig.position.z);
-        // Fade suave
-        bubble.material.opacity = Math.min(1, (8 - distCapi) / 3);
-      } else {
-        bubble.visible = false;
-      }
-
-      // Capibara flota y avanza río abajo
-      capiMesh.position.y = 2 + Math.sin(t * 1.2) * 0.15;
-      capiMesh.position.x = Math.sin(t * 0.25) * 5;
-      capiMesh.position.z -= dt * 1.5;
-      if (capiMesh.position.z < -100) capiMesh.position.z = 15;
-      // Billboard: siempre mira al usuario
+      // Capi — flota en su lugar, siempre mira al usuario
+      capiMesh.position.y = 2 + Math.sin(t*1.2)*0.15;
       capiMesh.lookAt(rig.position.x, capiMesh.position.y, rig.position.z);
 
-      renderer.render(scene, camera);
+      // Globo
+      const dCapi=rig.position.distanceTo(capiMesh.position);
+      if(dCapi<8){
+        bubble.visible=true;
+        bubble.position.set(capiMesh.position.x,capiMesh.position.y+3.2,capiMesh.position.z);
+        bubble.lookAt(rig.position.x,bubble.position.y,rig.position.z);
+        bubble.material.opacity=Math.min(1,(8-dCapi)/3);
+      } else bubble.visible=false;
+
+      sign.lookAt(rig.position.x,sign.position.y,rig.position.z);
+      renderer.render(scene,camera);
     });
 
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
+    window.addEventListener('resize',()=>{
+      camera.aspect=innerWidth/innerHeight;
       camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setSize(innerWidth,innerHeight);
     });
   </script>
 </body>
