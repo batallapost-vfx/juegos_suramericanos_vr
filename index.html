@@ -21,9 +21,15 @@
       font-family: Arial, sans-serif; letter-spacing: 1px;
     }
     #vr-btn:hover { opacity: 0.85; }
+    #version {
+      position: absolute; bottom: 8px; right: 12px;
+      color: rgba(255,255,255,0.4); font-family: monospace; font-size: 11px;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
+  <div id="version">v20</div>
   <div id="info">🖱️ Click + arrastrar: mirar | WASD: mover | Q/E: girar</div>
   <button id="vr-btn">Entrar en VR</button>
 
