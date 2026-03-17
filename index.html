@@ -29,7 +29,7 @@
   </style>
 </head>
 <body>
-  <div id="version">v25</div>
+  <div id="version">v26</div>
   <div id="info">🖱️ Click + arrastrar: mirar | WASD: mover | Q/E: girar</div>
   <button id="vr-btn">Entrar en VR</button>
 
@@ -268,7 +268,58 @@
     capiMesh.position.set(0, 2, 5);
     scene.add(capiMesh);
 
-    // ─── CARTEL ──────────────────────────────────────────────────────────────
+    // ─── GLOBO DE DIÁLOGO ────────────────────────────────────────────────────
+    const bubbleCanvas = document.createElement('canvas');
+    bubbleCanvas.width = 512; bubbleCanvas.height = 256;
+    const bCtx = bubbleCanvas.getContext('2d');
+
+    function drawBubble(text) {
+      bCtx.clearRect(0, 0, 512, 256);
+      // Fondo blanco redondeado
+      bCtx.fillStyle = 'rgba(255,255,255,0.92)';
+      bCtx.beginPath();
+      bCtx.roundRect(10, 10, 492, 190, 24);
+      bCtx.fill();
+      // Borde magenta
+      bCtx.strokeStyle = '#c0186a';
+      bCtx.lineWidth = 4;
+      bCtx.beginPath();
+      bCtx.roundRect(10, 10, 492, 190, 24);
+      bCtx.stroke();
+      // Colita del globo (apunta hacia abajo)
+      bCtx.fillStyle = 'rgba(255,255,255,0.92)';
+      bCtx.beginPath();
+      bCtx.moveTo(220, 196); bCtx.lineTo(256, 246); bCtx.lineTo(292, 196);
+      bCtx.fill();
+      bCtx.strokeStyle = '#c0186a';
+      bCtx.lineWidth = 4;
+      bCtx.beginPath();
+      bCtx.moveTo(222, 196); bCtx.lineTo(256, 244); bCtx.lineTo(290, 196);
+      bCtx.stroke();
+      // Texto
+      bCtx.fillStyle = '#3a003a';
+      bCtx.font = 'bold 28px Arial';
+      bCtx.textAlign = 'center';
+      // Wrap de texto
+      const words = text.split(' ');
+      let line = '', y = 70, lineH = 38;
+      for (const w of words) {
+        const test = line + w + ' ';
+        if (bCtx.measureText(test).width > 440 && line) {
+          bCtx.fillText(line.trim(), 256, y); line = w + ' '; y += lineH;
+        } else line = test;
+      }
+      bCtx.fillText(line.trim(), 256, y);
+    }
+
+    drawBubble('¡Vamos los Juegos Suramericanos Santa Fe 2026!');
+    const bubbleTex = new THREE.CanvasTexture(bubbleCanvas);
+    const bubble = new THREE.Mesh(
+      new THREE.PlaneGeometry(3, 1.5),
+      new THREE.MeshBasicMaterial({ map: bubbleTex, transparent: true, depthWrite: false, side: THREE.DoubleSide })
+    );
+    bubble.visible = false;
+    scene.add(bubble);
     const c2d = document.createElement('canvas');
     c2d.width = 512; c2d.height = 128;
     const ctx = c2d.getContext('2d');
@@ -339,6 +390,18 @@
       rig.position.x += (Math.cos(yaw) * input.moveX - Math.sin(yaw) * input.moveZ) * 8 * dt;
       rig.position.z += (Math.sin(yaw) * input.moveX + Math.cos(yaw) * input.moveZ) * 8 * dt;
       rig.rotation.y -= input.turnX * 1.5 * dt;
+
+      // Globo de diálogo — aparece cuando el usuario está cerca del capi
+      const distCapi = rig.position.distanceTo(capiMesh.position);
+      if (distCapi < 8) {
+        bubble.visible = true;
+        bubble.position.set(capiMesh.position.x, capiMesh.position.y + 3.2, capiMesh.position.z);
+        bubble.lookAt(rig.position.x, bubble.position.y, rig.position.z);
+        // Fade suave
+        bubble.material.opacity = Math.min(1, (8 - distCapi) / 3);
+      } else {
+        bubble.visible = false;
+      }
 
       // Capibara flota y avanza río abajo
       capiMesh.position.y = 2 + Math.sin(t * 1.2) * 0.15;
