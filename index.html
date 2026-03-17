@@ -1,4 +1,7 @@
-<!DOCTYPE html>
+// Remos
+      const moving=input.moveZ!==0||input.moveX!==0;
+      if(moving) remoT+=dt*2.5;
+      remo.rotation.x = Math.sin(remoT)*0.3;       // palada adelante/atr<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -47,7 +50,7 @@
   </style>
 </head>
 <body>
-  <div id="version">v62</div>
+  <div id="version">v63</div>
   <div id="hud">
     <div id="score-box">⭐ <span id="score">1000</span> pts</div>
     <div id="timer-box">⏱️ <span id="timer">0:00</span></div>
@@ -337,7 +340,7 @@
           remo=gltf.scene;
           remo.scale.set(1.6,1.6,1.6);
           remo.position.set(0,-0.3,-0.8);
-          remo.rotation.set(0,0,Math.PI/2);
+          remo.rotation.set(0, 0, Math.PI/2); // horizontal base
           remo.traverse(n=>{
             if(n.isMesh){
               n.castShadow=true;
