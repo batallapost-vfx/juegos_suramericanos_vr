@@ -141,8 +141,8 @@
         loader.load('assets/models/Kayak.glb', gltf=>{
           const k = gltf.scene;
           k.scale.set(4.0,4.0,4.0);
-          k.rotation.set(0, Math.PI / 2, 0); // 90° — prueba si apunta bien
-          k.position.set(0,-0.9,-3.8); // más abajo y atrás
+          k.rotation.set(0, Math.PI / -2, 0); // 90° — prueba si apunta bien
+          k.position.set(0,-0.9,-6.8); // más abajo y atrás
           k.traverse(n=>{
             if(n.isMesh){
               n.castShadow=true;
@@ -161,7 +161,7 @@
           kayakGroup.remove(remo);
           remo = gltf.scene;
           remo.scale.set(1.6,1.6,1.6);
-          remo.position.set(0, -0.3, -0.8); // más cerca de la cámara
+          remo.position.set(0, -0.3, -2); // más cerca de la cámara
           remo.rotation.y = 0;
           remo.rotation.z = Math.PI/2;
           remo.traverse(n=>{
