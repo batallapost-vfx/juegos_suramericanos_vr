@@ -29,7 +29,7 @@
   </style>
 </head>
 <body>
-  <div id="version">v24</div>
+  <div id="version">v25</div>
   <div id="info">🖱️ Click + arrastrar: mirar | WASD: mover | Q/E: girar</div>
   <button id="vr-btn">Entrar en VR</button>
 
@@ -263,7 +263,7 @@
     const capiTex = new THREE.TextureLoader().load('assets/sprites/016_Canotaje_Capibara_v06.png');
     const capiMesh = new THREE.Mesh(
       new THREE.PlaneGeometry(4, 4),
-      new THREE.MeshBasicMaterial({ map: capiTex, transparent: true, depthWrite: false, side: THREE.DoubleSide })
+      new THREE.MeshStandardMaterial({ map: capiTex, transparent: true, depthWrite: false, side: THREE.DoubleSide, roughness: 0.8, metalness: 0.0 })
     );
     capiMesh.position.set(0, 2, 5);
     scene.add(capiMesh);
