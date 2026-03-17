@@ -314,6 +314,9 @@
 
     // ─── ÁRBOLES GLB ─────────────────────────────────────────────────────────
     const loader = new GLTFLoader();
+    const draco = new DRACOLoader();
+    draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/');
+    loader.setDRACOLoader(draco);
     const TREE_URL = 'assets/models/arbol%2001.glb';
     const treePositions = [
       // Costa derecha
