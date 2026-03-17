@@ -53,7 +53,7 @@
   </style>
 </head>
 <body>
-  <div id="version">v40</div>
+  <div id="version">v42</div>
   <div id="hud">
     <div id="score-box">⭐ <span id="score">1000</span> pts</div>
     <div id="timer-box">⏱️ <span id="timer">0:00</span></div>
@@ -120,25 +120,42 @@
         const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
         const loader = new GLTFLoader();
 
-        // Kayak — rotado para que la proa apunte hacia adelante, más grande
+        // Kayak — tint púrpura/magenta
         loader.load('assets/models/Kayak.glb', gltf=>{
           const k = gltf.scene;
-          k.scale.set(1.4, 1.4, 1.4);
-          k.rotation.y = Math.PI; // proa hacia adelante
-          k.position.set(0, -0.6, -1.8);
-          k.traverse(n=>{ if(n.isMesh) n.castShadow=true; });
+          k.scale.set(1.4,1.4,1.4);
+          k.rotation.y = Math.PI;
+          k.position.set(0,-0.6,-2.4);
+          k.traverse(n=>{
+            if(n.isMesh){
+              n.castShadow=true;
+              n.material = n.material.clone();
+              n.material.color.setHex(0x7b2d8b); // púrpura
+              n.material.emissive = new THREE.Color(0x2a0a30);
+              n.material.emissiveIntensity = 0.15;
+            }
+          });
           kayakGroup.add(k);
           console.log('Kayak GLB ✓');
         }, undefined, err=>console.warn('Kayak GLB err:',err));
 
-        // Remo — horizontal en manos, más grande y cerca
+        // Remo — magenta/rosa
         loader.load('assets/models/Remo.glb', gltf=>{
           kayakGroup.remove(remo);
           remo = gltf.scene;
-          remo.scale.set(1.6, 1.6, 1.6);
-          remo.position.set(0, -0.15, -0.6);
-          remo.rotation.y = Math.PI / 2; // horizontal
-          remo.traverse(n=>{ if(n.isMesh) n.castShadow=true; });
+          remo.scale.set(1.6,1.6,1.6);
+          remo.position.set(0,-0.15,-0.6);
+          remo.rotation.y = 0;
+          remo.rotation.z = Math.PI/2;
+          remo.traverse(n=>{
+            if(n.isMesh){
+              n.castShadow=true;
+              n.material = n.material.clone();
+              n.material.color.setHex(0xc0186a); // magenta
+              n.material.emissive = new THREE.Color(0x3a0020);
+              n.material.emissiveIntensity = 0.15;
+            }
+          });
           kayakGroup.add(remo);
           console.log('Remo GLB ✓');
         }, undefined, err=>console.warn('Remo GLB err:',err));
@@ -148,7 +165,6 @@
 
     // ─── SKYBOX TEXTURA ───────────────────────────────────────────────────────
     const skyTex = new THREE.TextureLoader().load('assets/images/textura_cielo.jpeg');
-    skyTex.mapping = THREE.EquirectangularReflectionMapping;
     const skyDome = new THREE.Mesh(
       new THREE.SphereGeometry(1000,32,32),
       new THREE.MeshBasicMaterial({ map:skyTex, side:THREE.BackSide })
