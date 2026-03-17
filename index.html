@@ -26,6 +26,11 @@
       font-family:Arial,sans-serif; font-size:13px;
       padding:8px 16px; border-radius:20px;
     }
+    #penalty {
+      position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+      color:#ff3333; font-family:Arial,sans-serif; font-size:48px; font-weight:bold;
+      text-shadow:0 0 20px #ff0000; opacity:0; pointer-events:none;
+    }
     #finish-screen {
       display:none; position:absolute; top:0; left:0; width:100%; height:100%;
       background:rgba(0,0,0,0.72); flex-direction:column; align-items:center; justify-content:center;
@@ -38,22 +43,11 @@
       margin-top:20px; padding:14px 36px; font-size:18px; border:none; border-radius:30px;
       background:linear-gradient(135deg,#c0186a,#7b2d8b); color:#fff; cursor:pointer;
     }
-    #penalty {
-      position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-      color:#ff3333; font-family:Arial,sans-serif; font-size:48px; font-weight:bold;
-      text-shadow:0 0 20px #ff0000; opacity:0; pointer-events:none;
-    }
-    #vr-btn {
-      position:absolute; bottom:24px; left:50%; transform:translateX(-50%);
-      background:linear-gradient(135deg,#c0186a,#7b2d8b);
-      color:#fff; border:none; padding:14px 32px;
-      font-size:16px; border-radius:30px; cursor:pointer; letter-spacing:1px;
-    }
     #version { position:absolute; bottom:8px; right:12px; color:rgba(255,255,255,0.3); font-family:monospace; font-size:11px; pointer-events:none; }
   </style>
 </head>
 <body>
-  <div id="version">v61</div>
+  <div id="version">v62</div>
   <div id="hud">
     <div id="score-box">⭐ <span id="score">1000</span> pts</div>
     <div id="timer-box">⏱️ <span id="timer">0:00</span></div>
@@ -68,7 +62,7 @@
     <div class="final-score" id="finish-final"></div>
     <button onclick="location.reload()">🔁 Jugar de nuevo</button>
   </div>
-  <button id="vr-btn">Entrar en VR</button>
+  <button id="vr-btn" style="position:absolute;bottom:24px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#c0186a,#7b2d8b);color:#fff;border:none;padding:14px 32px;font-size:16px;border-radius:30px;cursor:pointer;letter-spacing:1px;">Entrar en VR</button>
 
   <script type="importmap">
   {
@@ -96,9 +90,8 @@
     renderer.toneMappingExposure = 0.9;
     document.body.appendChild(renderer.domElement);
     const vrBtn = VRButton.createButton(renderer);
-    vrBtn.style.display = 'none';
-    document.body.appendChild(vrBtn);
-    document.getElementById('vr-btn').addEventListener('click', ()=>vrBtn.click());
+    vrBtn.style.display='none'; document.body.appendChild(vrBtn);
+    document.getElementById('vr-btn').addEventListener('click',()=>vrBtn.click());
 
     // ─── CÁMARA + RIG ─────────────────────────────────────────────────────────
     const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 2000);
@@ -107,96 +100,25 @@
     rig.position.set(0, 2, 20);
     scene.add(rig);
 
-    // ─── KAYAK + REMO GLB (primera persona) ──────────────────────────────────
+    // ─── KAYAK GROUP (hijo del rig) ───────────────────────────────────────────
     const kayakGroup = new THREE.Group();
-    kayakGroup.position.set(0,-0.5,-1.0);
+    kayakGroup.position.set(0, -0.5, -1.0);
     rig.add(kayakGroup);
-
-    let remo = new THREE.Group(); // placeholder hasta que cargue el GLB
+    let remo = new THREE.Group();
     kayakGroup.add(remo);
 
-    (async()=>{
-      try {
-        const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
-        const loader = new GLTFLoader();
-        loader.setRequestHeader({});
-        loader.setRequestHeader({});  // evita workers
-
-    // Hue shift: convierte RGB→HSL, rota el hue, vuelve a RGB
-    function applyHueShift(obj, hueShift, satMult = 1.2) {
-      obj.traverse(n => {
-        if (!n.isMesh) return;
-        n.material = n.material.clone();
-        const col = n.material.color || new THREE.Color(1,1,1);
-        // Convertir a HSL, rotar hue, volver a RGB
-        const hsl = {};
-        col.getHSL(hsl);
-        hsl.h = (hsl.h + hueShift) % 1.0;
-        hsl.s = Math.min(1, hsl.s * satMult);
-        col.setHSL(hsl.h, hsl.s, hsl.l);
-        n.material.color = col;
-        n.castShadow = true;
-      });
-    }
-        loader.load('assets/models/Kayak.glb', gltf=>{
-          const k = gltf.scene;
-          k.scale.set(1.4,1.4,1.4);
-          k.rotation.set(0, Math.PI / 2, 0); // 90° — prueba si apunta bien
-          k.position.set(0,-0.9,-2.8); // más abajo y atrás
-          k.traverse(n=>{
-            if(n.isMesh){
-              n.castShadow=true;
-              n.material = n.material.clone();
-              n.material.color.setHex(0x7b2d8b); // púrpura
-              n.material.emissive = new THREE.Color(0x2a0a30);
-              n.material.emissiveIntensity = 0.15;
-            }
-          });
-          kayakGroup.add(k);
-          console.log('Kayak GLB ✓');
-        }, undefined, err=>console.warn('Kayak GLB err:',err));
-
-        // Remo — magenta/rosa
-        loader.load('assets/models/Remo.glb', gltf=>{
-          kayakGroup.remove(remo);
-          remo = gltf.scene;
-          remo.scale.set(1.6,1.6,1.6);
-          remo.position.set(0, -0.3, -0.4); // más cerca de la cámara
-          remo.rotation.y = 0;
-          remo.rotation.z = Math.PI/2;
-          remo.traverse(n=>{
-            if(n.isMesh){
-              n.castShadow=true;
-              n.material = n.material.clone();
-              n.material.color.setHex(0xc0186a); // magenta
-              n.material.emissive = new THREE.Color(0x3a0020);
-              n.material.emissiveIntensity = 0.15;
-            }
-          });
-          kayakGroup.add(remo);
-          console.log('Remo GLB ✓');
-        }, undefined, err=>console.warn('Remo GLB err:',err));
-
-      } catch(e){ console.warn('GLTFLoader:',e); }
-    })();
-
-    // ─── SKYBOX HDRI ──────────────────────────────────────────────────────────
+    // ─── HDRI SKYBOX ──────────────────────────────────────────────────────────
     (async()=>{
       try {
         const { RGBELoader } = await import('three/addons/loaders/RGBELoader.js');
         const rgbeLoader = new RGBELoader();
         rgbeLoader.setDataType(THREE.HalfFloatType);
-        rgbeLoader.load(
-          'assets/hdris/table_mountain_2_puresky_2k.hdr',
-          tex => {
-            tex.mapping = THREE.EquirectangularReflectionMapping;
-            scene.background = tex;
-            console.log('HDRI ✓');
-          },
-          undefined,
-          err => console.warn('HDRI err:', err)
-        );
-      } catch(e){ console.warn('RGBELoader:', e); }
+        rgbeLoader.load('assets/hdris/table_mountain_2_puresky_2k.hdr', tex=>{
+          tex.mapping = THREE.EquirectangularReflectionMapping;
+          scene.background = tex;
+          console.log('HDRI ✓');
+        }, undefined, err=>console.warn('HDRI err:', err));
+      } catch(e){ console.warn(e); }
     })();
 
     // ─── LUCES ────────────────────────────────────────────────────────────────
@@ -204,46 +126,28 @@
     const sunL = new THREE.DirectionalLight(0xffaa66, 1.8);
     sunL.position.set(-80,18,-300); sunL.castShadow=true; scene.add(sunL);
 
-    // ─── CURVA DE LA PISTA ────────────────────────────────────────────────────
+    // ─── CURVA PISTA ──────────────────────────────────────────────────────────
     const curvePts = [
-      new THREE.Vector3(  0,0,  30),
-      new THREE.Vector3(  8,0,   0),
-      new THREE.Vector3( -6,0, -40),
-      new THREE.Vector3( 10,0, -80),
-      new THREE.Vector3( -8,0,-120),
-      new THREE.Vector3(  4,0,-160),
-      new THREE.Vector3(-10,0,-200),
-      new THREE.Vector3(  6,0,-240),
-      new THREE.Vector3( -4,0,-280),
-      new THREE.Vector3(  8,0,-320),
-      new THREE.Vector3( -6,0,-360),
-      new THREE.Vector3(  0,0,-400),
+      new THREE.Vector3(  0,0,  30), new THREE.Vector3(  8,0,   0),
+      new THREE.Vector3( -6,0, -40), new THREE.Vector3( 10,0, -80),
+      new THREE.Vector3( -8,0,-120), new THREE.Vector3(  4,0,-160),
+      new THREE.Vector3(-10,0,-200), new THREE.Vector3(  6,0,-240),
+      new THREE.Vector3( -4,0,-280), new THREE.Vector3(  8,0,-320),
+      new THREE.Vector3( -6,0,-360), new THREE.Vector3(  0,0,-400),
     ];
     const trackCurve = new THREE.CatmullRomCurve3(curvePts);
-
-    // ─── BOYAS ────────────────────────────────────────────────────────────────
     const GATE_COUNT = 40;
     const GATE_WIDTH = 6;
-    const boyaMatR = new THREE.MeshStandardMaterial({ color:0xe8521a, roughness:0.4, emissive:0xe8521a, emissiveIntensity:0.2 });
-    const boyaMatY = new THREE.MeshStandardMaterial({ color:0xffe033, roughness:0.4, emissive:0xffe033, emissiveIntensity:0.2 });
-    const stickMat = new THREE.MeshStandardMaterial({ color:0xffffff });
 
+    // ─── POSICIONES DE BOYAS ──────────────────────────────────────────────────
+    const boyaPosL = [], boyaPosR = [];
     for(let i=0; i<GATE_COUNT; i++){
       const t = i/(GATE_COUNT-1);
       const pt  = trackCurve.getPoint(t);
       const tan = trackCurve.getTangent(t);
       const perp = new THREE.Vector3(-tan.z,0,tan.x).normalize();
-      const lPos = pt.clone().addScaledVector(perp,  GATE_WIDTH);
-      const rPos = pt.clone().addScaledVector(perp, -GATE_WIDTH);
-      const bL = new THREE.Mesh(new THREE.SphereGeometry(0.4,8,8), boyaMatR);
-      const bR = new THREE.Mesh(new THREE.SphereGeometry(0.4,8,8), boyaMatY);
-      bL.position.set(lPos.x,0.4,lPos.z);
-      bR.position.set(rPos.x,0.4,rPos.z);
-      scene.add(bL); scene.add(bR);
-      [lPos,rPos].forEach(p=>{
-        const s=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,1.2,6),stickMat);
-        s.position.set(p.x,0,p.z); scene.add(s);
-      });
+      boyaPosL.push(pt.clone().addScaledVector(perp,  GATE_WIDTH));
+      boyaPosR.push(pt.clone().addScaledVector(perp, -GATE_WIDTH));
     }
 
     // ─── RÍO ──────────────────────────────────────────────────────────────────
@@ -255,33 +159,8 @@
 
     // ─── ORILLAS ──────────────────────────────────────────────────────────────
     const bkMat = new THREE.MeshStandardMaterial({ color:0x6b8c3a, roughness:0.9 });
-    const bkR = new THREE.Mesh(new THREE.BoxGeometry(80,1.5,1200), bkMat);
-    bkR.position.set(190,-0.5,-400); scene.add(bkR);
-    const bkL = new THREE.Mesh(new THREE.BoxGeometry(80,1.5,1200), bkMat);
-    bkL.position.set(-190,-0.5,-400); scene.add(bkL);
-
-
-    // ─── ÁRBOLES GLB (costa derecha) ──────────────────────────────────────────
-    const treePosArr = [];
-    for(let z=10; z>-780; z-=18){
-      treePosArr.push([155+Math.random()*10,0,z+Math.random()*6]);
-      treePosArr.push([168+Math.random()*10,0,z+Math.random()*6]);
-    }
-    (async()=>{
-      try {
-        const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
-        const loader = new GLTFLoader();
-        loader.load('assets/models/arbol 01.glb', gltf=>{
-          treePosArr.forEach(([x,y,z])=>{
-            const tr=gltf.scene.clone(), s=3+Math.random()*2;
-            tr.scale.set(s,s,s); tr.position.set(x,y,z);
-            tr.rotation.y=Math.random()*Math.PI*2;
-            tr.traverse(n=>{ if(n.isMesh){ n.castShadow=true; n.receiveShadow=true; } });
-            scene.add(tr);
-          });
-        }, undefined, err=>console.warn('GLB:', err));
-      } catch(e){ console.warn(e); }
-    })();
+    const bkR = new THREE.Mesh(new THREE.BoxGeometry(80,1.5,1200), bkMat); bkR.position.set(190,-0.5,-400); scene.add(bkR);
+    const bkL = new THREE.Mesh(new THREE.BoxGeometry(80,1.5,1200), bkMat); bkL.position.set(-190,-0.5,-400); scene.add(bkL);
 
     // ─── PUENTE ───────────────────────────────────────────────────────────────
     const BRIDGE_Z=-120;
@@ -350,7 +229,7 @@
     // ─── BARCOS ───────────────────────────────────────────────────────────────
     function makeBarco(x,z,largo,ancho,color){
       const g=new THREE.Group();
-      const casco = new THREE.Mesh(new THREE.BoxGeometry(largo,3,ancho),new THREE.MeshStandardMaterial({color,roughness:0.7,metalness:0.4}));
+      const casco=new THREE.Mesh(new THREE.BoxGeometry(largo,3,ancho),new THREE.MeshStandardMaterial({color,roughness:0.7,metalness:0.4}));
       casco.position.set(0,0.5,0); g.add(casco);
       const cabina=new THREE.Mesh(new THREE.BoxGeometry(largo*0.22,5,ancho*0.7),new THREE.MeshStandardMaterial({color:0xddddcc,roughness:0.5}));
       cabina.position.set(-largo*0.28,4.5,0); g.add(cabina);
@@ -365,6 +244,29 @@
     scene.add(makeBarco(-200,-60, 55,14,0x334455));
     scene.add(makeBarco(-220,-200,65,16,0x445533));
     scene.add(makeBarco(-210,-340,50,12,0x554433));
+
+    // ─── META ─────────────────────────────────────────────────────────────────
+    const metaPt = trackCurve.getPoint(1);
+    const metaTan = trackCurve.getTangent(1);
+    const metaPerp = new THREE.Vector3(-metaTan.z,0,metaTan.x).normalize();
+    const metaPostMat = new THREE.MeshStandardMaterial({color:0xffee00,emissive:0xffee00,emissiveIntensity:0.8});
+    const metaL = new THREE.Mesh(new THREE.BoxGeometry(0.3,6,0.3),metaPostMat);
+    const metaR = metaL.clone();
+    metaL.position.set(metaPt.x+metaPerp.x*(GATE_WIDTH+1),3,metaPt.z);
+    metaR.position.set(metaPt.x-metaPerp.x*(GATE_WIDTH+1),3,metaPt.z);
+    scene.add(metaL); scene.add(metaR);
+    const bannerCv=document.createElement('canvas'); bannerCv.width=512; bannerCv.height=128;
+    const bCtx2=bannerCv.getContext('2d');
+    const bg2=bCtx2.createLinearGradient(0,0,512,0);
+    bg2.addColorStop(0,'#c0186a'); bg2.addColorStop(0.5,'#7b2d8b'); bg2.addColorStop(1,'#e8521a');
+    bCtx2.fillStyle=bg2; bCtx2.fillRect(0,0,512,128);
+    bCtx2.fillStyle='#ffee00'; bCtx2.font='bold 56px Arial'; bCtx2.textAlign='center';
+    bCtx2.fillText('🏁 META',256,80);
+    const metaBanner=new THREE.Mesh(new THREE.PlaneGeometry(GATE_WIDTH*2+2,1.5),
+      new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(bannerCv),transparent:true,side:THREE.DoubleSide}));
+    metaBanner.position.set(metaPt.x,5.5,metaPt.z);
+    metaBanner.rotation.y=Math.atan2(metaTan.x,metaTan.z);
+    scene.add(metaBanner);
 
     // ─── CAPIBARA ─────────────────────────────────────────────────────────────
     const capiTex=new THREE.TextureLoader().load('assets/sprites/016_Canotaje_Capibara_v06.png');
@@ -403,6 +305,108 @@
     const sign=new THREE.Mesh(new THREE.PlaneGeometry(5,1.25),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c2d),transparent:true}));
     sign.position.set(0,5,10); scene.add(sign);
 
+    // ─── GLB LOADER (kayak, remo, boyas, árboles) ─────────────────────────────
+    (async()=>{
+      try {
+        const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
+        const loader = new GLTFLoader();
+        loader.setRequestHeader({});
+
+        // KAYAK — tus valores exactos
+        loader.load('assets/models/Kayak.glb', gltf=>{
+          const k = gltf.scene;
+          k.scale.set(3,3,3);
+          k.rotation.set(0, Math.PI/2, 0);
+          k.position.set(0,-0.9,2);
+          k.traverse(n=>{
+            if(n.isMesh){
+              n.castShadow=true;
+              n.material=n.material.clone();
+              n.material.color.setHex(0x7b2d8b);
+              n.material.emissive=new THREE.Color(0x2a0a30);
+              n.material.emissiveIntensity=0.15;
+            }
+          });
+          kayakGroup.add(k);
+          console.log('Kayak ✓');
+        }, undefined, err=>console.warn('Kayak err:',err));
+
+        // REMO
+        loader.load('assets/models/Remo.glb', gltf=>{
+          kayakGroup.remove(remo);
+          remo=gltf.scene;
+          remo.scale.set(1.6,1.6,1.6);
+          remo.position.set(0,-0.3,-0.8);
+          remo.rotation.set(0,0,Math.PI/2);
+          remo.traverse(n=>{
+            if(n.isMesh){
+              n.castShadow=true;
+              n.material=n.material.clone();
+              n.material.color.setHex(0xc0186a);
+              n.material.emissive=new THREE.Color(0x3a0020);
+              n.material.emissiveIntensity=0.15;
+            }
+          });
+          kayakGroup.add(remo);
+          console.log('Remo ✓');
+        }, undefined, err=>console.warn('Remo err:',err));
+
+        // BOYAS INFLABLES — magenta izquierda, púrpura derecha
+        loader.load('assets/models/inflatable_buoy.glb', gltf=>{
+          const boyaTemplate = gltf.scene;
+          boyaPosL.forEach(p=>{
+            const b=boyaTemplate.clone();
+            b.scale.set(1,1,1);
+            b.position.set(p.x,0,p.z);
+            b.traverse(n=>{
+              if(n.isMesh){
+                n.castShadow=true;
+                n.material=n.material.clone();
+                n.material.color.setHex(0xc0186a);
+              }
+            });
+            scene.add(b);
+          });
+          boyaPosR.forEach(p=>{
+            const b=boyaTemplate.clone();
+            b.scale.set(1,1,1);
+            b.position.set(p.x,0,p.z);
+            b.traverse(n=>{
+              if(n.isMesh){
+                n.castShadow=true;
+                n.material=n.material.clone();
+                n.material.color.setHex(0x7b2d8b);
+              }
+            });
+            scene.add(b);
+          });
+          console.log('Boyas ✓');
+        }, undefined, err=>{
+          console.warn('Boyas err, fallback geométrico:', err);
+          boyaPosL.forEach(p=>{ const b=new THREE.Mesh(new THREE.SphereGeometry(0.4,8,8),new THREE.MeshStandardMaterial({color:0xc0186a})); b.position.set(p.x,0.4,p.z); scene.add(b); });
+          boyaPosR.forEach(p=>{ const b=new THREE.Mesh(new THREE.SphereGeometry(0.4,8,8),new THREE.MeshStandardMaterial({color:0x7b2d8b})); b.position.set(p.x,0.4,p.z); scene.add(b); });
+        });
+
+        // ÁRBOLES
+        const treePosArr=[];
+        for(let z=10;z>-780;z-=18){
+          treePosArr.push([155+Math.random()*10,0,z+Math.random()*6]);
+          treePosArr.push([168+Math.random()*10,0,z+Math.random()*6]);
+        }
+        loader.load('assets/models/arbol 01.glb', gltf=>{
+          treePosArr.forEach(([x,y,z])=>{
+            const tr=gltf.scene.clone(), s=3+Math.random()*2;
+            tr.scale.set(s,s,s); tr.position.set(x,y,z);
+            tr.rotation.y=Math.random()*Math.PI*2;
+            tr.traverse(n=>{ if(n.isMesh){ n.castShadow=true; n.receiveShadow=true; } });
+            scene.add(tr);
+          });
+          console.log('Árboles ✓');
+        }, undefined, err=>console.warn('Árboles err:',err));
+
+      } catch(e){ console.warn('GLTFLoader:',e); }
+    })();
+
     // ─── INPUT ────────────────────────────────────────────────────────────────
     const keys={};
     window.addEventListener('keydown',e=>keys[e.code]=true);
@@ -419,32 +423,6 @@
     });
     const input={moveX:0,moveZ:0,turnX:0};
 
-    // ─── META ─────────────────────────────────────────────────────────────────
-    const metaZ = -395;
-    const metaMat = new THREE.MeshBasicMaterial({ color:0xffee00, side:THREE.DoubleSide, transparent:true, opacity:0.7 });
-    const metaL = new THREE.Mesh(new THREE.BoxGeometry(0.3, 6, 0.3), new THREE.MeshStandardMaterial({color:0xffee00, emissive:0xffee00, emissiveIntensity:0.8}));
-    const metaR = metaL.clone();
-    const metaBanner = new THREE.Mesh(new THREE.PlaneGeometry(GATE_WIDTH*2+2, 1.5), metaMat);
-    // Posición basada en el último punto de la curva
-    const metaPt = trackCurve.getPoint(1);
-    const metaTan = trackCurve.getTangent(1);
-    const metaPerp = new THREE.Vector3(-metaTan.z,0,metaTan.x).normalize();
-    metaL.position.set(metaPt.x + metaPerp.x*(GATE_WIDTH+1), 3, metaPt.z);
-    metaR.position.set(metaPt.x - metaPerp.x*(GATE_WIDTH+1), 3, metaPt.z);
-    metaBanner.position.set(metaPt.x, 5.5, metaPt.z);
-    metaBanner.rotation.y = Math.atan2(metaTan.x, metaTan.z);
-    scene.add(metaL); scene.add(metaR); scene.add(metaBanner);
-
-    // Texto en el banner
-    const bannerCv = document.createElement('canvas'); bannerCv.width=512; bannerCv.height=128;
-    const bCtx2 = bannerCv.getContext('2d');
-    const bg2 = bCtx2.createLinearGradient(0,0,512,0);
-    bg2.addColorStop(0,'#c0186a'); bg2.addColorStop(0.5,'#7b2d8b'); bg2.addColorStop(1,'#e8521a');
-    bCtx2.fillStyle=bg2; bCtx2.fillRect(0,0,512,128);
-    bCtx2.fillStyle='#ffee00'; bCtx2.font='bold 56px Arial'; bCtx2.textAlign='center';
-    bCtx2.fillText('🏁 META', 256, 80);
-    metaBanner.material = new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(bannerCv), transparent:true, side:THREE.DoubleSide});
-
     // ─── SCORING ──────────────────────────────────────────────────────────────
     let score=1000, penaltyCooldown=0, wasOutside=false, raceTime=0, raceFinished=false;
     const scoreEl=document.getElementById('score');
@@ -456,31 +434,25 @@
       penaltyEl.style.opacity='1';
       setTimeout(()=>penaltyEl.style.opacity='0',700);
     }
-
     function formatTime(s){
       const m=Math.floor(s/60), sec=Math.floor(s%60);
       return `${m}:${sec.toString().padStart(2,'0')}`;
     }
-
     function triggerFinish(){
       raceFinished=true;
-      // Bonus: cuanto más rápido, más bonus (base 500, -5 por segundo)
-      const timeBonus = Math.max(0, Math.round(500 - raceTime * 5));
-      const finalScore = score + timeBonus;
-      document.getElementById('finish-time').textContent  = `⏱️ Tiempo: ${formatTime(raceTime)}`;
-      document.getElementById('finish-points').textContent = `⭐ Puntos de carrera: ${score}`;
-      document.getElementById('finish-bonus').textContent  = `🚀 Bonus por velocidad: +${timeBonus}`;
-      document.getElementById('finish-final').textContent  = `TOTAL: ${finalScore} pts`;
+      const timeBonus=Math.max(0,Math.round(500-raceTime*5));
+      const finalScore=score+timeBonus;
+      document.getElementById('finish-time').textContent=`⏱️ Tiempo: ${formatTime(raceTime)}`;
+      document.getElementById('finish-points').textContent=`⭐ Puntos: ${score}`;
+      document.getElementById('finish-bonus').textContent=`🚀 Bonus velocidad: +${timeBonus}`;
+      document.getElementById('finish-final').textContent=`TOTAL: ${finalScore} pts`;
       finishScreen.style.display='flex';
-      // Capi dice felicitaciones
       drawBubble('¡Felicitaciones! ¡Llegaste a la meta! 🏆');
       bubbleTex.needsUpdate=true;
-      capiMesh.position.set(metaPt.x+3, 2, metaPt.z);
+      capiMesh.position.set(metaPt.x+3,2,metaPt.z);
       bubble.visible=true;
-      bubble.position.set(metaPt.x+3, 5.5, metaPt.z);
+      bubble.position.set(metaPt.x+3,5.5,metaPt.z);
     }
-
-    // Punto más cercano en la curva (muestreo simple)
     function closestPointOnCurve(px,pz){
       let bestDist=Infinity, bestPt=null;
       for(let i=0;i<=120;i++){
@@ -493,15 +465,13 @@
 
     // ─── LOOP ─────────────────────────────────────────────────────────────────
     const clock=new THREE.Clock();
-    let t=0,remoT=0;
+    let t=0, remoT=0;
 
     renderer.setAnimationLoop(()=>{
       const dt=clock.getDelta(); t+=dt;
       if(!raceFinished) raceTime+=dt;
       penaltyCooldown=Math.max(0,penaltyCooldown-dt);
-
-      // Timer HUD
-      timerEl.textContent = formatTime(raceTime);
+      timerEl.textContent=formatTime(raceTime);
 
       // Gamepads XR
       if(renderer.xr.isPresenting){
@@ -520,29 +490,27 @@
       rig.position.z+=(Math.sin(yaw)*input.moveX+Math.cos(yaw)*input.moveZ)*8*dt;
       rig.rotation.y-=input.turnX*1.5*dt;
 
-      // Remos — palada lateral realista
+      // Remos
       const moving=input.moveZ!==0||input.moveX!==0;
       if(moving) remoT+=dt*2.5;
-      remo.rotation.x = Math.sin(remoT) * 0.3;        // inclina adelante/atrás
-      remo.rotation.z = Math.sin(remoT) * 0.18;       // gira lateral alternado
-      remo.position.y = -0.15 + Math.sin(remoT) * 0.06; // sube/baja levemente
-      kayakGroup.rotation.z = Math.sin(remoT) * (moving ? 0.02 : 0);
+      remo.rotation.x=Math.sin(remoT)*0.3;
+      remo.rotation.z=Math.PI/2+Math.sin(remoT)*0.18;
+      remo.position.y=-0.3+Math.sin(remoT)*0.06;
+      kayakGroup.rotation.z=Math.sin(remoT)*(moving?0.02:0);
 
       // Oleaje
       river.position.y=-0.1+Math.sin(t*0.4)*0.04;
 
-      // ── Detección meta ──
-      if(!raceFinished && rig.position.z < metaPt.z + 3 && rig.position.z > metaPt.z - 3){
-        triggerFinish();
-      }
+      // Meta
+      if(!raceFinished && rig.position.z<metaPt.z+3 && rig.position.z>metaPt.z-3) triggerFinish();
 
-      // ── Detección corredor ──
+      // Corredor
       const px=rig.position.x, pz=rig.position.z;
-      if(pz<25 && pz>-410){
+      if(pz<25&&pz>-410){
         const cp=closestPointOnCurve(px,pz);
         const dist=Math.sqrt((px-cp.x)**2+(pz-cp.z)**2);
         const isOutside=dist>GATE_WIDTH+1.5;
-        if(isOutside && !wasOutside && penaltyCooldown<=0){
+        if(isOutside&&!wasOutside&&penaltyCooldown<=0){
           score=Math.max(0,score-25);
           scoreEl.textContent=score;
           showPenalty();
