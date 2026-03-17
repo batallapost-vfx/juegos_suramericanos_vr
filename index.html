@@ -53,7 +53,7 @@
   </style>
 </head>
 <body>
-  <div id="version">v43</div>
+  <div id="version">v44</div>
   <div id="hud">
     <div id="score-box">⭐ <span id="score">1000</span> pts</div>
     <div id="timer-box">⏱️ <span id="timer">0:00</span></div>
@@ -164,12 +164,22 @@
     })();
 
     // ─── SKYBOX TEXTURA ───────────────────────────────────────────────────────
-    const skyMat = new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: 0xffffff });
+    // Usamos un plano enorme inclinado para cielo plano sin distorsión
+    const skyMat = new THREE.MeshBasicMaterial({ side: THREE.FrontSide, color: 0xffffff, depthWrite: false });
     const skyDome = new THREE.Mesh(new THREE.SphereGeometry(1000,32,32), skyMat);
+    skyDome.rotation.y = -Math.PI / 2; // orienta la textura de frente
     scene.add(skyDome);
     new THREE.TextureLoader().load(
       'assets/images/textura_cielo.jpeg',
-      tex => { skyMat.map = tex; skyMat.needsUpdate = true; console.log('Cielo ✓'); },
+      tex => {
+        tex.mapping = THREE.UVMapping;
+        tex.wrapS = THREE.ClampToEdgeWrapping;
+        tex.wrapT = THREE.ClampToEdgeWrapping;
+        skyMat.map = tex;
+        skyMat.side = THREE.BackSide;
+        skyMat.needsUpdate = true;
+        console.log('Cielo ✓');
+      },
       undefined,
       err => console.warn('Cielo err:', err)
     );
