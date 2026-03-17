@@ -21,7 +21,7 @@
   </style>
 </head>
 <body>
-  <div id="version">v79</div>
+  <div id="version">v80</div>
   <div id="hud">
     <div id="score-box">⭐ <span id="score">1000</span> pts</div>
     <div id="timer-box">⏱️ <span id="timer">0:00</span></div>
@@ -52,7 +52,7 @@
     import { VRButton } from 'three/addons/webxr/VRButton.js';
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x8899bb, 0.003);
+    scene.fog = new THREE.FogExp2(0x3a2060, 0.004);
 
     const renderer = new THREE.WebGLRenderer({ antialias:true });
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -213,15 +213,50 @@
     const bubble=new THREE.Mesh(new THREE.PlaneGeometry(3,1.5),new THREE.MeshBasicMaterial({map:bubbleTex,transparent:true,depthWrite:false,side:THREE.DoubleSide}));
     bubble.visible=false; scene.add(bubble);
 
-    // CARTEL
-    const c2d=document.createElement('canvas'); c2d.width=512; c2d.height=128;
-    const ctx=c2d.getContext('2d');
-    const gr=ctx.createLinearGradient(0,0,512,0); gr.addColorStop(0,'#c0186a'); gr.addColorStop(0.5,'#7b2d8b'); gr.addColorStop(1,'#e8521a');
-    ctx.fillStyle=gr; ctx.roundRect(0,0,512,128,20); ctx.fill();
-    ctx.fillStyle='#fff'; ctx.font='bold 28px Arial'; ctx.textAlign='center';
-    ctx.fillText('JUEGOS SURAMERICANOS',256,50); ctx.font='bold 22px Arial'; ctx.fillText('SANTA FE 2026',256,90);
-    const sign=new THREE.Mesh(new THREE.PlaneGeometry(5,1.25),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c2d),transparent:true}));
-    sign.position.set(0,5,10); scene.add(sign);
+    // CARTELES CON LOGOS
+    const texLoader = new THREE.TextureLoader();
+    const logoCircular   = texLoader.load('assets/images/Logo Circular.png');
+    const logoSuram      = texLoader.load('assets/images/Logo Suramericanas.png');
+    const fondoPlaca     = texLoader.load('assets/images/Fondo_Placa_00000.jpg');
+
+    // Cartel grande al inicio — fondo + logo suramericanas
+    const signGroup = new THREE.Group();
+    const signBg = new THREE.Mesh(new THREE.PlaneGeometry(6,3),
+      new THREE.MeshBasicMaterial({map:fondoPlaca, transparent:true, side:THREE.DoubleSide}));
+    signGroup.add(signBg);
+    const signLogo = new THREE.Mesh(new THREE.PlaneGeometry(5,2),
+      new THREE.MeshBasicMaterial({map:logoSuram, transparent:true, side:THREE.DoubleSide, depthWrite:false}));
+    signLogo.position.z = 0.01;
+    signGroup.add(signLogo);
+    signGroup.position.set(0, 5, 10);
+    scene.add(signGroup);
+
+    // Logos circulares flotantes a lo largo de la pista
+    const logoCircPositions = [
+      [-12, 3, -30], [12, 3, -60], [-12, 3, -100], [12, 3, -140],
+      [-12, 3, -180], [12, 3, -220], [-12, 3, -260], [12, 3, -300],
+      [-12, 3, -340], [12, 3, -380],
+    ];
+    const logoCircMeshes = [];
+    logoCircPositions.forEach(([x,y,z])=>{
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(2.5,2.5),
+        new THREE.MeshBasicMaterial({map:logoCircular, transparent:true, side:THREE.DoubleSide, depthWrite:false}));
+      m.position.set(x,y,z);
+      scene.add(m);
+      logoCircMeshes.push(m);
+    });
+
+    // Cartel en la meta — logo suramericanas
+    const metaSignGroup = new THREE.Group();
+    const metaSignBg = new THREE.Mesh(new THREE.PlaneGeometry(6,3),
+      new THREE.MeshBasicMaterial({map:fondoPlaca, transparent:true, side:THREE.DoubleSide}));
+    metaSignGroup.add(metaSignBg);
+    const metaSignLogo = new THREE.Mesh(new THREE.PlaneGeometry(5,2),
+      new THREE.MeshBasicMaterial({map:logoSuram, transparent:true, side:THREE.DoubleSide, depthWrite:false}));
+    metaSignLogo.position.z = 0.01;
+    metaSignGroup.add(metaSignLogo);
+    metaSignGroup.position.set(metaPt.x, 7, metaPt.z - 5);
+    scene.add(metaSignGroup);
 
     // INPUT
     const keys={};
@@ -427,7 +462,9 @@
         bubble.material.opacity=Math.min(1,(8-dCapi)/3);
       } else if(!raceFinished) bubble.visible=false;
 
-      sign.lookAt(rig.position.x,sign.position.y,rig.position.z);
+      signGroup.lookAt(rig.position.x, signGroup.position.y, rig.position.z);
+      metaSignGroup.lookAt(rig.position.x, metaSignGroup.position.y, rig.position.z);
+      logoCircMeshes.forEach(m=>m.lookAt(rig.position.x, m.position.y, rig.position.z));
       renderer.render(scene,camera);
     });
 
