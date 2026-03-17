@@ -21,7 +21,7 @@
   </style>
 </head>
 <body>
-  <div id="version">v82</div>
+  <div id="version">v84</div>
   <div id="hud">
     <div id="score-box">⭐ <span id="score">1000</span> pts</div>
     <div id="timer-box">⏱️ <span id="timer">0:00</span></div>
@@ -258,7 +258,47 @@
     metaSignGroup.position.set(metaPt.x, 7, metaPt.z - 5);
     scene.add(metaSignGroup);
 
-    // INPUT
+    // POWER-UPS — orbes y zapatillas
+    const orbeTex = texLoader.load('assets/images/Orbe_Capi.png');
+    const zapaTex = texLoader.load('assets/images/Zapa Capi.png');
+
+    const powerups = [];
+    const orbeMat = new THREE.MeshBasicMaterial({map:orbeTex, transparent:true, depthWrite:false, side:THREE.DoubleSide});
+    const zapaMat = new THREE.MeshBasicMaterial({map:zapaTex, transparent:true, depthWrite:false, side:THREE.DoubleSide});
+
+    // Glow sprite — círculo semitransparente detrás
+    function makeGlow(color){
+      const c=document.createElement('canvas'); c.width=128; c.height=128;
+      const cx=c.getContext('2d');
+      const g=cx.createRadialGradient(64,64,0,64,64,64);
+      g.addColorStop(0, color.replace(')',',0.5)').replace('rgb','rgba'));
+      g.addColorStop(1, color.replace(')',',0)').replace('rgb','rgba'));
+      cx.fillStyle=g; cx.fillRect(0,0,128,128);
+      return new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c), transparent:true, depthWrite:false, side:THREE.DoubleSide});
+    }
+    const orbeGlowMat = makeGlow('rgb(100,180,255)');
+    const zapaGlowMat = makeGlow('rgb(255,200,50)');
+
+    // Distribuir a lo largo de la pista
+    for(let i=2; i<GATE_COUNT-2; i+=5){
+      const t = i/(GATE_COUNT-1);
+      const pt = trackCurve.getPoint(t);
+      const isOrbe = Math.random() > 0.4;
+
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1.0,1.0), isOrbe ? orbeMat : zapaMat);
+      mesh.position.set(pt.x + (Math.random()-0.5)*8, 1.2, pt.z);
+
+      // Glow más chico
+      const glow = new THREE.Mesh(new THREE.PlaneGeometry(1.6,1.6), isOrbe ? orbeGlowMat : zapaGlowMat);
+      glow.position.z = -0.05;
+      mesh.add(glow);
+
+      scene.add(mesh);
+      powerups.push({ mesh, type: isOrbe ? 'orbe' : 'zapa', collected: false });
+    }
+
+    let speedBoost = 1.0;
+    let speedBoostTimer = 0;
     const keys={};
     window.addEventListener('keydown',e=>keys[e.code]=true);
     window.addEventListener('keyup',  e=>keys[e.code]=false);
@@ -424,8 +464,8 @@
       input.turnX=keys['KeyQ']?-1:keys['KeyE']?1:renderer.xr.isPresenting?input.turnX:0;
 
       const yaw=rig.rotation.y;
-      rig.position.x+=(Math.cos(yaw)*input.moveX-Math.sin(yaw)*input.moveZ)*8*dt;
-      rig.position.z+=(Math.sin(yaw)*input.moveX+Math.cos(yaw)*input.moveZ)*8*dt;
+      rig.position.x+=(Math.cos(yaw)*input.moveX-Math.sin(yaw)*input.moveZ)*8*speedBoost*dt;
+      rig.position.z+=(Math.sin(yaw)*input.moveX+Math.cos(yaw)*input.moveZ)*8*speedBoost*dt;
       rig.rotation.y-=input.turnX*1.5*dt;
 
       // Animación remo — solo el wrapper, el mesh queda intacto
@@ -436,7 +476,39 @@
       remoWrapper.position.y=-0.3+Math.sin(remoT)*0.06;
       kayakGroup.rotation.z=Math.sin(remoT)*(moving?0.02:0);
 
-      river.position.y=-0.1+Math.sin(t*0.4)*0.04;
+      // Speed boost timer
+      if(speedBoostTimer > 0){
+        speedBoostTimer -= dt;
+        if(speedBoostTimer <= 0){ speedBoost = 1.0; }
+      }
+
+      // Power-ups — animación y colisión
+      powerups.forEach(p=>{
+        if(p.collected) return;
+        p.mesh.position.y = 1.2 + Math.sin(t*2 + p.mesh.position.z*0.1)*0.2;
+        p.mesh.rotation.y += dt*1.2;
+        p.mesh.lookAt(rig.position.x, p.mesh.position.y, rig.position.z);
+        const d = rig.position.distanceTo(p.mesh.position);
+        if(d < 1.5){
+          p.collected = true;
+          scene.remove(p.mesh);
+          if(p.type === 'orbe'){
+            score = Math.min(1500, score + 50);
+            scoreEl.textContent = score;
+            penaltyEl.textContent = '+50';
+            penaltyEl.style.color = '#00ffaa';
+            penaltyEl.style.opacity = '1';
+            setTimeout(()=>{ penaltyEl.style.opacity='0'; penaltyEl.style.color='#ff3333'; }, 700);
+          } else {
+            speedBoost = 1.8;
+            speedBoostTimer = 5.0;
+            penaltyEl.textContent = '⚡ +velocidad!';
+            penaltyEl.style.color = '#ffee00';
+            penaltyEl.style.opacity = '1';
+            setTimeout(()=>{ penaltyEl.style.opacity='0'; penaltyEl.style.color='#ff3333'; }, 1200);
+          }
+        }
+      });
 
       if(!raceFinished&&rig.position.z<metaPt.z+3&&rig.position.z>metaPt.z-3) triggerFinish();
 
