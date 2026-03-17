@@ -324,7 +324,7 @@
         loader.load('assets/models/Remo.glb', gltf=>{
           remoMesh=gltf.scene;
           remoMesh.scale.set(2.2, 2.2, 2.2);
-          remoMesh.rotation.set(Math.PI/2, Math.PI/2, 0);
+          remoMesh.rotation.set(0, Math.PI/2, Math.PI/2);
           remoMesh.traverse(n=>{ if(n.isMesh){ n.castShadow=true; n.material=n.material.clone(); n.material.color.setHex(0xc0186a); n.material.emissive=new THREE.Color(0x3a0020); n.material.emissiveIntensity=0.15; } });
           remoWrapper.add(remoMesh);
           console.log('Remo ✓');
