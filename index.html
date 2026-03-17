@@ -53,7 +53,7 @@
   </style>
 </head>
 <body>
-  <div id="version">v54</div>
+  <div id="version">v56</div>
   <div id="hud">
     <div id="score-box">⭐ <span id="score">1000</span> pts</div>
     <div id="timer-box">⏱️ <span id="timer">0:00</span></div>
@@ -259,8 +259,7 @@
     bkR.position.set(190,-0.5,-400); scene.add(bkR);
     const bkL = new THREE.Mesh(new THREE.BoxGeometry(80,1.5,1200), bkMat);
     bkL.position.set(-190,-0.5,-400); scene.add(bkL);
-    const beach = new THREE.Mesh(new THREE.PlaneGeometry(300,30), new THREE.MeshStandardMaterial({color:0x8a6a3a}));
-    beach.rotation.x=-Math.PI/2; beach.position.set(0,-0.05,30); scene.add(beach);
+
 
     // ─── ÁRBOLES GLB (costa derecha) ──────────────────────────────────────────
     const treePosArr = [];
