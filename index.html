@@ -53,7 +53,7 @@
   </style>
 </head>
 <body>
-  <div id="version">v57</div>
+  <div id="version">v58</div>
   <div id="hud">
     <div id="score-box">⭐ <span id="score">1000</span> pts</div>
     <div id="timer-box">⏱️ <span id="timer">0:00</span></div>
@@ -140,9 +140,9 @@
     }
         loader.load('assets/models/Kayak.glb', gltf=>{
           const k = gltf.scene;
-          k.scale.set(4.0,4.0,4.0);
-          k.rotation.set(0, Math.PI / -2, 0); // 90° — prueba si apunta bien
-          k.position.set(0,-0.9,-6.8); // más abajo y atrás
+          k.scale.set(1.4,1.4,1.4);
+          k.rotation.set(0, Math.PI / 2, 0); // 90° — prueba si apunta bien
+          k.position.set(0,-0.9,-2.8); // más abajo y atrás
           k.traverse(n=>{
             if(n.isMesh){
               n.castShadow=true;
@@ -161,7 +161,7 @@
           kayakGroup.remove(remo);
           remo = gltf.scene;
           remo.scale.set(1.6,1.6,1.6);
-          remo.position.set(0, -0.3, -2); // más cerca de la cámara
+          remo.position.set(0, -0.3, -0.4); // más cerca de la cámara
           remo.rotation.y = 0;
           remo.rotation.z = Math.PI/2;
           remo.traverse(n=>{
