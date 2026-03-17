@@ -29,7 +29,7 @@
   </style>
 </head>
 <body>
-  <div id="version">v20</div>
+  <div id="version">v23</div>
   <div id="info">🖱️ Click + arrastrar: mirar | WASD: mover | Q/E: girar</div>
   <button id="vr-btn">Entrar en VR</button>
 
@@ -61,7 +61,6 @@
     renderer.toneMappingExposure = 2.2;
     document.body.appendChild(renderer.domElement);
 
-    // VR Button
     const vrBtn = VRButton.createButton(renderer);
     vrBtn.style.display = 'none';
     document.body.appendChild(vrBtn);
@@ -74,15 +73,15 @@
     rig.position.set(0, 2, 20);
     scene.add(rig);
 
-    // ─── SKYBOX ATARDECER ────────────────────────────────────────────────────
+    // ─── SKYBOX HORA MÁGICA ──────────────────────────────────────────────────
     const skyGeo = new THREE.SphereGeometry(500, 32, 32);
     const skyMat = new THREE.ShaderMaterial({
       side: THREE.BackSide,
       uniforms: {
-        topColor:    { value: new THREE.Color(0x2a1a6e) },  // violeta profundo arriba
-        midColor:    { value: new THREE.Color(0xd4479a) },  // magenta hora mágica
-        horizColor:  { value: new THREE.Color(0xffb347) },  // dorado horizonte
-        bottomColor: { value: new THREE.Color(0xff8c69) },  // salmón reflejo
+        topColor:    { value: new THREE.Color(0x2a1a6e) },
+        midColor:    { value: new THREE.Color(0xd4479a) },
+        horizColor:  { value: new THREE.Color(0xffb347) },
+        bottomColor: { value: new THREE.Color(0xff8c69) },
       },
       vertexShader: `
         varying vec3 vPos;
@@ -108,10 +107,9 @@
       new THREE.SphereGeometry(8, 16, 16),
       new THREE.MeshBasicMaterial({ color: 0xffe066 })
     );
-    sunSphere.position.set(-80, 35, -300);
+    sunSphere.position.set(-80, 18, -300);
     scene.add(sunSphere);
-    // Halo del sol
-    const haloMat = new THREE.MeshBasicMaterial({ color: 0xff8800, transparent: true, opacity: 0.18, side: THREE.DoubleSide });
+    const haloMat = new THREE.MeshBasicMaterial({ color: 0xff7799, transparent: true, opacity: 0.13, side: THREE.DoubleSide });
     const halo = new THREE.Mesh(new THREE.CircleGeometry(22, 32), haloMat);
     halo.position.copy(sunSphere.position);
     halo.lookAt(0, 2, 0);
@@ -130,40 +128,32 @@
     sun.shadow.camera.top = 100;
     sun.shadow.camera.bottom = -100;
     scene.add(sun);
-    // Luz suave desde abajo (reflejo del agua)
     const fillLight = new THREE.DirectionalLight(0xff6644, 0.3);
     fillLight.position.set(0, -10, 0);
     scene.add(fillLight);
 
-    // ─── RÍO PARANÁ (muy ancho) ───────────────────────────────────────────────
+    // ─── RÍO PARANÁ ──────────────────────────────────────────────────────────
     const RIVER_WIDTH = 300;
     const RIVER_LENGTH = 800;
     const riverGeo = new THREE.PlaneGeometry(RIVER_WIDTH, RIVER_LENGTH, 80, 80);
-    // Desplazar vértices para simular oleaje suave
     const pos = riverGeo.attributes.position;
     for (let i = 0; i < pos.count; i++) {
       pos.setZ(i, (Math.random() - 0.5) * 0.08);
     }
     riverGeo.computeVertexNormals();
-    const riverMat = new THREE.MeshStandardMaterial({
-      color: 0x6aa0b8,
-      roughness: 0.15,
-      metalness: 0.5,
-      transparent: true,
-      opacity: 0.9,
-    });
-    // Gradiente celeste-marrón via vertex colors
     const colors = [];
     for (let i = 0; i < pos.count; i++) {
-      const x = (pos.getX(i) / RIVER_WIDTH) + 0.5; // 0 a 1
-      // celeste reflejo cielo en el centro, marrón barro en los bordes
+      const x = (pos.getX(i) / RIVER_WIDTH) + 0.5;
       const r = 0.3 + x * 0.25 + Math.random() * 0.03;
       const g = 0.45 + x * 0.1  + Math.random() * 0.03;
       const b = 0.55 + (1 - x) * 0.2 + Math.random() * 0.03;
       colors.push(r, g, b);
     }
     riverGeo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-    riverMat.vertexColors = true;
+    const riverMat = new THREE.MeshStandardMaterial({
+      color: 0x6aa0b8, roughness: 0.15, metalness: 0.5,
+      transparent: true, opacity: 0.9, vertexColors: true,
+    });
     const river = new THREE.Mesh(riverGeo, riverMat);
     river.rotation.x = -Math.PI / 2;
     river.position.set(0, -0.1, -180);
@@ -173,23 +163,20 @@
     // ─── ORILLAS ─────────────────────────────────────────────────────────────
     const bankMat = new THREE.MeshStandardMaterial({ color: 0x6b8c3a, roughness: 0.9 });
     const bankMatDirt = new THREE.MeshStandardMaterial({ color: 0x8a6a3a, roughness: 1 });
-    // Orilla este (derecha)
     const bankR = new THREE.Mesh(new THREE.BoxGeometry(60, 1.5, 800), bankMat);
     bankR.position.set(180, -0.5, -180);
     bankR.receiveShadow = true;
     scene.add(bankR);
-    // Orilla oeste (izquierda) — más lejana, se pierde en la niebla
     const bankL = new THREE.Mesh(new THREE.BoxGeometry(80, 1.5, 800), bankMat);
     bankL.position.set(-190, -0.5, -180);
     bankL.receiveShadow = true;
     scene.add(bankL);
-    // Playa de arena/barro delante
     const beach = new THREE.Mesh(new THREE.PlaneGeometry(300, 30), bankMatDirt);
     beach.rotation.x = -Math.PI / 2;
     beach.position.set(0, -0.05, 30);
     scene.add(beach);
 
-    // ─── ÁRBOLES SIMPLES (costa) ──────────────────────────────────────────────
+    // ─── ÁRBOLES GEOMÉTRICOS ─────────────────────────────────────────────────
     function makeTree(x, z, h = 5) {
       const g = new THREE.Group();
       const trunk = new THREE.Mesh(
@@ -209,74 +196,60 @@
       g.position.set(x, 0, z);
       return g;
     }
-    // Hilera de árboles en la costa derecha
     for (let z = -350; z < 50; z += 12) {
       scene.add(makeTree(152 + Math.random() * 8, z + Math.random() * 4, 4 + Math.random() * 4));
       scene.add(makeTree(160 + Math.random() * 8, z + Math.random() * 4, 4 + Math.random() * 3));
     }
 
     // ─── PUENTE ROSARIO-VICTORIA ──────────────────────────────────────────────
-    // El puente cruza el río de lado a lado, el usuario pasa por debajo
     const BRIDGE_Z = -120;
-    const bridgeMat  = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.4, metalness: 0.6 });
-    const cableMat   = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, roughness: 0.3, metalness: 0.7 });
-    const pillarMat  = new THREE.MeshStandardMaterial({ color: 0xbbbbbb, roughness: 0.5, metalness: 0.5 });
-    const roadMat    = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.9 });
+    const bridgeMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.4, metalness: 0.6 });
+    const cableMat  = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, roughness: 0.3, metalness: 0.7 });
+    const pillarMat = new THREE.MeshStandardMaterial({ color: 0xbbbbbb, roughness: 0.5, metalness: 0.5 });
+    const roadMat   = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.9 });
 
-    // Tablero del puente (deck)
     const deck = new THREE.Mesh(new THREE.BoxGeometry(320, 0.6, 14), roadMat);
     deck.position.set(0, 12, BRIDGE_Z);
     deck.castShadow = true;
-    deck.receiveShadow = true;
     scene.add(deck);
 
-    // Barandas
     [-6.5, 6.5].forEach(z => {
       const rail = new THREE.Mesh(new THREE.BoxGeometry(320, 0.3, 0.3), bridgeMat);
       rail.position.set(0, 12.6, BRIDGE_Z + z);
       scene.add(rail);
     });
 
-    // Pilares principales (torres atirantadas)
     [-60, 60].forEach(x => {
-      // Torre
       const tower = new THREE.Mesh(new THREE.BoxGeometry(3, 45, 3), pillarMat);
       tower.position.set(x, 22, BRIDGE_Z);
       tower.castShadow = true;
       scene.add(tower);
-      // Base de la torre en el agua
       const base = new THREE.Mesh(new THREE.CylinderGeometry(4, 5, 6, 8), pillarMat);
       base.position.set(x, -2, BRIDGE_Z);
       scene.add(base);
-
-      // Cables desde la cima de la torre al deck
       const towerTop = new THREE.Vector3(x, 44, BRIDGE_Z);
-      const anchors = [-30, -15, 0, 15, 30].map(dx => new THREE.Vector3(x + (x > 0 ? dx : -dx), 12.3, BRIDGE_Z));
-      anchors.forEach(anchor => {
-        const dir = new THREE.Vector3().subVectors(anchor, towerTop);
-        const len = dir.length();
-        const mid = new THREE.Vector3().addVectors(towerTop, anchor).multiplyScalar(0.5);
-        const cable = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, len, 4), cableMat);
-        cable.position.copy(mid);
-        cable.quaternion.setFromUnitVectors(
-          new THREE.Vector3(0, 1, 0),
-          dir.clone().normalize()
-        );
-        scene.add(cable);
-      });
+      [-30, -15, 0, 15, 30].map(dx => new THREE.Vector3(x + (x > 0 ? dx : -dx), 12.3, BRIDGE_Z))
+        .forEach(anchor => {
+          const dir = new THREE.Vector3().subVectors(anchor, towerTop);
+          const len = dir.length();
+          const mid = new THREE.Vector3().addVectors(towerTop, anchor).multiplyScalar(0.5);
+          const cable = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, len, 4), cableMat);
+          cable.position.copy(mid);
+          cable.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dir.clone().normalize());
+          scene.add(cable);
+        });
     });
 
-    // Pilares secundarios de soporte cada 30m
     for (let x = -150; x <= 150; x += 30) {
-      if (Math.abs(x) === 60) continue; // ya están las torres
+      if (Math.abs(x) === 60) continue;
       const pil = new THREE.Mesh(new THREE.CylinderGeometry(1, 1.3, 14, 8), pillarMat);
       pil.position.set(x, 5.7, BRIDGE_Z);
       pil.castShadow = true;
       scene.add(pil);
     }
 
-    // ─── BOYAS DE REGATA ─────────────────────────────────────────────────────
-    const boyaMat = new THREE.MeshStandardMaterial({ color: 0xe8521a, roughness: 0.4 });
+    // ─── BOYAS ───────────────────────────────────────────────────────────────
+    const boyaMat  = new THREE.MeshStandardMaterial({ color: 0xe8521a, roughness: 0.4 });
     const boyaMatY = new THREE.MeshStandardMaterial({ color: 0xffe033, roughness: 0.4 });
     for (let z = 40; z > -100; z -= 18) {
       [-8, 8].forEach((x, i) => {
@@ -286,7 +259,24 @@
       });
     }
 
-    // ─── CARTEL FLOTANTE ─────────────────────────────────────────────────────
+    // ─── CAPIBARA GEOMÉTRICO ─────────────────────────────────────────────────
+    const capiGroup = new THREE.Group();
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xc8964a });
+    const body = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 16), bodyMat);
+    body.scale.set(1.4, 0.9, 1.0);
+    capiGroup.add(body);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.38, 16, 16), bodyMat);
+    head.position.set(0.7, 0.2, 0);
+    capiGroup.add(head);
+    const vest = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.35, 0.45, 0.5, 12),
+      new THREE.MeshStandardMaterial({ color: 0xc0186a })
+    );
+    capiGroup.add(vest);
+    capiGroup.position.set(0, 0.5, 5);
+    scene.add(capiGroup);
+
+    // ─── CARTEL ──────────────────────────────────────────────────────────────
     const c2d = document.createElement('canvas');
     c2d.width = 512; c2d.height = 128;
     const ctx = c2d.getContext('2d');
@@ -307,62 +297,19 @@
     sign.position.set(0, 5, 10);
     scene.add(sign);
 
-    // ─── CAPIBARA PNG ─────────────────────────────────────────────────────────
-    const capiTex = new THREE.TextureLoader().load(
-      'assets/sprites/016_Canotaje_Capibara_v06.png'
-    );
-    const capiMesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(3, 3),
-      new THREE.MeshBasicMaterial({ map: capiTex, transparent: true, depthWrite: false, side: THREE.DoubleSide })
-    );
-    capiMesh.position.set(0, 1.5, 5);
-    scene.add(capiMesh);
-
-    // ─── ÁRBOLES GLB ─────────────────────────────────────────────────────────
-    try {
-      const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
-      const { DRACOLoader } = await import('three/addons/loaders/DRACOLoader.js');
-      const loader = new GLTFLoader();
-      const draco = new DRACOLoader();
-      draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/');
-      loader.setDRACOLoader(draco);
-    const TREE_URL = 'assets/models/arbol%2001.glb';
-    const treePositions = [
-      // Costa derecha
-      [155, 0, -10], [162, 0, -30], [150, 0, -50], [158, 0, -70], [153, 0, -90],
-      [160, 0, -110], [155, 0, -130], [162, 0, -150], [150, 0, -170], [157, 0, -190],
-      // Costa izquierda
-      [-155, 0, -10], [-162, 0, -30], [-150, 0, -50], [-158, 0, -70], [-153, 0, -90],
-      [-160, 0, -110], [-155, 0, -130], [-162, 0, -150],
-    ];
-
-    loader.load(TREE_URL, (gltf) => {
-      treePositions.forEach(([x, y, z]) => {
-        const tree = gltf.scene.clone();
-        const scale = 3 + Math.random() * 2;
-        tree.scale.set(scale, scale, scale);
-        tree.position.set(x + (Math.random() - 0.5) * 6, y, z + (Math.random() - 0.5) * 6);
-        tree.rotation.y = Math.random() * Math.PI * 2;
-        tree.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
-        scene.add(tree);
-      });
-    } catch(e) { console.warn('GLTFLoader no disponible:', e); }
-
-
-    // ─── INPUT / MOUSE LOOK ──────────────────────────────────────────────────
+    // ─── INPUT ───────────────────────────────────────────────────────────────
     const keys = {};
     window.addEventListener('keydown', e => keys[e.code] = true);
     window.addEventListener('keyup',   e => keys[e.code] = false);
 
-    let mouseDragging = false, lastMX = 0, lastMY = 0;
-    let camYaw = 0, camPitch = 0;
+    let mouseDragging = false, lastMX = 0, lastMY = 0, camYaw = 0, camPitch = 0;
     renderer.domElement.addEventListener('mousedown', e => { mouseDragging = true; lastMX = e.clientX; lastMY = e.clientY; });
     window.addEventListener('mouseup', () => mouseDragging = false);
     window.addEventListener('mousemove', e => {
       if (!mouseDragging || renderer.xr.isPresenting) return;
       camYaw   -= (e.clientX - lastMX) * 0.003;
       camPitch -= (e.clientY - lastMY) * 0.003;
-      camPitch  = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, camPitch));
+      camPitch  = Math.max(-Math.PI/3, Math.min(Math.PI/3, camPitch));
       lastMX = e.clientX; lastMY = e.clientY;
       camera.rotation.order = 'YXZ';
       camera.rotation.y = camYaw;
@@ -371,7 +318,7 @@
 
     const input = { moveX: 0, moveZ: 0, turnX: 0 };
 
-    // ─── ANIMATE ─────────────────────────────────────────────────────────────
+    // ─── LOOP ────────────────────────────────────────────────────────────────
     const clock = new THREE.Clock();
     let t = 0;
 
@@ -379,10 +326,8 @@
       const dt = clock.getDelta();
       t += dt;
 
-      // Gamepads XR
       if (renderer.xr.isPresenting) {
-        const session = renderer.xr.getSession();
-        for (const src of session.inputSources) {
+        for (const src of renderer.xr.getSession().inputSources) {
           const gp = src.gamepad;
           if (!gp) continue;
           if (src.handedness === 'left') {
@@ -394,28 +339,18 @@
         }
       }
 
-      // Teclado
-      input.moveZ = keys['KeyW'] || keys['ArrowUp']    ? -1 : keys['KeyS'] || keys['ArrowDown']  ?  1 : renderer.xr.isPresenting ? input.moveZ : 0;
-      input.moveX = keys['KeyA'] || keys['ArrowLeft']  ? -1 : keys['KeyD'] || keys['ArrowRight'] ?  1 : renderer.xr.isPresenting ? input.moveX : 0;
+      input.moveZ = keys['KeyW']||keys['ArrowUp']    ? -1 : keys['KeyS']||keys['ArrowDown']  ?  1 : renderer.xr.isPresenting ? input.moveZ : 0;
+      input.moveX = keys['KeyA']||keys['ArrowLeft']  ? -1 : keys['KeyD']||keys['ArrowRight'] ?  1 : renderer.xr.isPresenting ? input.moveX : 0;
       input.turnX = keys['KeyQ'] ? -1 : keys['KeyE'] ? 1 : renderer.xr.isPresenting ? input.turnX : 0;
 
-      // Movimiento rig
       const yaw = rig.rotation.y;
-      const spd = 8;
-      rig.position.x += (Math.cos(yaw) * input.moveX - Math.sin(yaw) * input.moveZ) * spd * dt;
-      rig.position.z += (Math.sin(yaw) * input.moveX + Math.cos(yaw) * input.moveZ) * spd * dt;
+      rig.position.x += (Math.cos(yaw) * input.moveX - Math.sin(yaw) * input.moveZ) * 8 * dt;
+      rig.position.z += (Math.sin(yaw) * input.moveX + Math.cos(yaw) * input.moveZ) * 8 * dt;
       rig.rotation.y -= input.turnX * 1.5 * dt;
 
-      // Oleaje suave del río
       river.position.y = -0.1 + Math.sin(t * 0.4) * 0.04;
-
-      // Capibara flota sobre el agua
-      capiMesh.position.y = 1.5 + Math.sin(t * 1.2) * 0.15;
-      capiMesh.position.x = Math.sin(t * 0.3) * 6;
-      capiMesh.position.z = 5 - (t * 0.5 % 60); // avanza río abajo, se reinicia
-      if (capiMesh.position.z < -55) capiMesh.position.z = 5;
-
-      // Cartel siempre mira al usuario
+      capiGroup.position.y = 0.5 + Math.sin(t * 2) * 0.05;
+      capiGroup.rotation.y += dt * 0.3;
       sign.lookAt(rig.position.x, sign.position.y, rig.position.z);
 
       renderer.render(scene, camera);
