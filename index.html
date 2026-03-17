@@ -53,7 +53,7 @@
   </style>
 </head>
 <body>
-  <div id="version">v53</div>
+  <div id="version">v54</div>
   <div id="hud">
     <div id="score-box">⭐ <span id="score">1000</span> pts</div>
     <div id="timer-box">⏱️ <span id="timer">0:00</span></div>
@@ -122,7 +122,22 @@
         loader.setRequestHeader({});
         loader.setRequestHeader({});  // evita workers
 
-        // Kayak — tint púrpura/magenta
+    // Hue shift: convierte RGB→HSL, rota el hue, vuelve a RGB
+    function applyHueShift(obj, hueShift, satMult = 1.2) {
+      obj.traverse(n => {
+        if (!n.isMesh) return;
+        n.material = n.material.clone();
+        const col = n.material.color || new THREE.Color(1,1,1);
+        // Convertir a HSL, rotar hue, volver a RGB
+        const hsl = {};
+        col.getHSL(hsl);
+        hsl.h = (hsl.h + hueShift) % 1.0;
+        hsl.s = Math.min(1, hsl.s * satMult);
+        col.setHSL(hsl.h, hsl.s, hsl.l);
+        n.material.color = col;
+        n.castShadow = true;
+      });
+    }
         loader.load('assets/models/Kayak.glb', gltf=>{
           const k = gltf.scene;
           k.scale.set(1.4,1.4,1.4);
