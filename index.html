@@ -340,7 +340,7 @@
           remo=gltf.scene;
           remo.scale.set(1.6,1.6,1.6);
           remo.position.set(0,-0.3,-0.8);
-          remo.rotation.set(0, 2, Math.PI/2); // horizontal base
+          remo.rotation.set(0, 0, 0); // horizontal base
           remo.traverse(n=>{
             if(n.isMesh){
               n.castShadow=true;
