@@ -29,7 +29,7 @@
   </style>
 </head>
 <body>
-  <div id="version">v23</div>
+  <div id="version">v24</div>
   <div id="info">🖱️ Click + arrastrar: mirar | WASD: mover | Q/E: girar</div>
   <button id="vr-btn">Entrar en VR</button>
 
@@ -259,22 +259,14 @@
       });
     }
 
-    // ─── CAPIBARA GEOMÉTRICO ─────────────────────────────────────────────────
-    const capiGroup = new THREE.Group();
-    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xc8964a });
-    const body = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 16), bodyMat);
-    body.scale.set(1.4, 0.9, 1.0);
-    capiGroup.add(body);
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.38, 16, 16), bodyMat);
-    head.position.set(0.7, 0.2, 0);
-    capiGroup.add(head);
-    const vest = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.35, 0.45, 0.5, 12),
-      new THREE.MeshStandardMaterial({ color: 0xc0186a })
+    // ─── CAPIBARA PNG ────────────────────────────────────────────────────────
+    const capiTex = new THREE.TextureLoader().load('assets/sprites/016_Canotaje_Capibara_v06.png');
+    const capiMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(4, 4),
+      new THREE.MeshBasicMaterial({ map: capiTex, transparent: true, depthWrite: false, side: THREE.DoubleSide })
     );
-    capiGroup.add(vest);
-    capiGroup.position.set(0, 0.5, 5);
-    scene.add(capiGroup);
+    capiMesh.position.set(0, 2, 5);
+    scene.add(capiMesh);
 
     // ─── CARTEL ──────────────────────────────────────────────────────────────
     const c2d = document.createElement('canvas');
@@ -348,10 +340,13 @@
       rig.position.z += (Math.sin(yaw) * input.moveX + Math.cos(yaw) * input.moveZ) * 8 * dt;
       rig.rotation.y -= input.turnX * 1.5 * dt;
 
-      river.position.y = -0.1 + Math.sin(t * 0.4) * 0.04;
-      capiGroup.position.y = 0.5 + Math.sin(t * 2) * 0.05;
-      capiGroup.rotation.y += dt * 0.3;
-      sign.lookAt(rig.position.x, sign.position.y, rig.position.z);
+      // Capibara flota y avanza río abajo
+      capiMesh.position.y = 2 + Math.sin(t * 1.2) * 0.15;
+      capiMesh.position.x = Math.sin(t * 0.25) * 5;
+      capiMesh.position.z -= dt * 1.5;
+      if (capiMesh.position.z < -100) capiMesh.position.z = 15;
+      // Billboard: siempre mira al usuario
+      capiMesh.lookAt(rig.position.x, capiMesh.position.y, rig.position.z);
 
       renderer.render(scene, camera);
     });
