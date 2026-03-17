@@ -319,10 +319,13 @@
     scene.add(capiMesh);
 
     // ─── ÁRBOLES GLB ─────────────────────────────────────────────────────────
-    const loader = new GLTFLoader();
-    const draco = new DRACOLoader();
-    draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/');
-    loader.setDRACOLoader(draco);
+    try {
+      const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
+      const { DRACOLoader } = await import('three/addons/loaders/DRACOLoader.js');
+      const loader = new GLTFLoader();
+      const draco = new DRACOLoader();
+      draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/');
+      loader.setDRACOLoader(draco);
     const TREE_URL = 'assets/models/arbol%2001.glb';
     const treePositions = [
       // Costa derecha
@@ -343,7 +346,7 @@
         tree.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
         scene.add(tree);
       });
-    }, undefined, (err) => console.warn('Error cargando árbol:', err));
+    } catch(e) { console.warn('GLTFLoader no disponible:', e); }
 
 
     // ─── INPUT / MOUSE LOOK ──────────────────────────────────────────────────
