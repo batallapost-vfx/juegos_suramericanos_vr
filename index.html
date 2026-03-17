@@ -53,7 +53,7 @@
   </style>
 </head>
 <body>
-  <div id="version">v45</div>
+  <div id="version">v47</div>
   <div id="hud">
     <div id="score-box">⭐ <span id="score">1000</span> pts</div>
     <div id="timer-box">⏱️ <span id="timer">0:00</span></div>
@@ -119,6 +119,8 @@
       try {
         const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
         const loader = new GLTFLoader();
+        loader.setRequestHeader({});
+        loader.setRequestHeader({});  // evita workers
 
         // Kayak — tint púrpura/magenta
         loader.load('assets/models/Kayak.glb', gltf=>{
@@ -164,18 +166,16 @@
     })();
 
     // ─── SKYBOX HDRI ──────────────────────────────────────────────────────────
-    const skyMat = new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: 0xff8844 });
-    const skyDome = new THREE.Mesh(new THREE.SphereGeometry(1000,32,32), skyMat);
-    scene.add(skyDome);
     (async()=>{
       try {
         const { RGBELoader } = await import('three/addons/loaders/RGBELoader.js');
-        new RGBELoader().load(
+        const rgbeLoader = new RGBELoader();
+        rgbeLoader.setDataType(THREE.HalfFloatType);
+        rgbeLoader.load(
           'assets/hdris/the_sky_is_on_fire_2k.hdr',
           tex => {
             tex.mapping = THREE.EquirectangularReflectionMapping;
-            skyMat.map = tex;
-            skyMat.needsUpdate = true;
+            scene.background = tex;
             console.log('HDRI ✓');
           },
           undefined,
