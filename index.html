@@ -53,7 +53,7 @@
   </style>
 </head>
 <body>
-  <div id="version">v38</div>
+  <div id="version">v39</div>
   <div id="hud">
     <div id="score-box">⭐ <span id="score">1000</span> pts</div>
     <div id="timer-box">⏱️ <span id="timer">0:00</span></div>
@@ -107,36 +107,51 @@
     rig.position.set(0, 2, 20);
     scene.add(rig);
 
-    // ─── KAYAK ────────────────────────────────────────────────────────────────
+    // ─── KAYAK + REMO GLB (primera persona) ──────────────────────────────────
     const kayakGroup = new THREE.Group();
-    const kMat  = new THREE.MeshStandardMaterial({ color:0xc0186a, roughness:0.4, metalness:0.2 });
-    const ckMat = new THREE.MeshStandardMaterial({ color:0x7b2d8b, roughness:0.5 });
-    const pMat  = new THREE.MeshStandardMaterial({ color:0xffffff, roughness:0.3 });
-    const mMat  = new THREE.MeshStandardMaterial({ color:0xdddddd, roughness:0.5 });
-    const kBody = new THREE.Mesh(new THREE.CylinderGeometry(0.01,0.38,3.5,12), kMat);
-    kBody.rotation.x = Math.PI/2; kBody.position.set(0,-0.55,-1.2); kayakGroup.add(kBody);
-    const ckpit = new THREE.Mesh(new THREE.TorusGeometry(0.42,0.06,8,24), ckMat);
-    ckpit.rotation.x = Math.PI/2; ckpit.position.set(0,-0.28,0.4); kayakGroup.add(ckpit);
-    const remo = new THREE.Group();
-    const rmng = new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,2.4,8), mMat);
-    rmng.rotation.z = Math.PI/2; remo.add(rmng);
-    [-1.2,1.2].forEach(x=>{ const p=new THREE.Mesh(new THREE.BoxGeometry(0.18,0.44,0.03),pMat); p.position.set(x,0,0); p.rotation.z=x>0?0.18:-0.18; remo.add(p); });
-    remo.position.set(0,-0.25,-0.1); kayakGroup.add(remo);
     kayakGroup.position.set(0,-0.5,-1.0);
     rig.add(kayakGroup);
 
-    // ─── SKYBOX ───────────────────────────────────────────────────────────────
-    scene.add(new THREE.Mesh(new THREE.SphereGeometry(1000,32,32), new THREE.ShaderMaterial({
-      side: THREE.BackSide,
-      uniforms:{ tc:{value:new THREE.Color(0x2a1a6e)}, mc:{value:new THREE.Color(0xd4479a)}, hc:{value:new THREE.Color(0xffb347)}, bc:{value:new THREE.Color(0xff8c69)} },
-      vertexShader:`varying vec3 vP; void main(){ vP=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
-      fragmentShader:`uniform vec3 tc,mc,hc,bc; varying vec3 vP;
-        void main(){ float h=normalize(vP).y; vec3 c;
-          if(h>0.3) c=mix(mc,tc,(h-0.3)/0.7);
-          else if(h>0.0) c=mix(hc,mc,h/0.3);
-          else c=mix(bc,hc,-h*3.0);
-          gl_FragColor=vec4(c,1.0); }`
-    })));
+    let remo = new THREE.Group(); // placeholder hasta que cargue el GLB
+    kayakGroup.add(remo);
+
+    (async()=>{
+      try {
+        const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
+        const loader = new GLTFLoader();
+
+        // Kayak — solo la proa, posicionado adelante/abajo
+        loader.load('assets/models/Kayak.glb', gltf=>{
+          const k = gltf.scene;
+          k.scale.set(1,1,1); // ajustamos después si hace falta
+          k.position.set(0,-0.3,-0.5);
+          k.traverse(n=>{ if(n.isMesh){ n.castShadow=true; } });
+          kayakGroup.add(k);
+          console.log('Kayak GLB ✓');
+        }, undefined, err=>console.warn('Kayak GLB err:',err));
+
+        // Remo — en manos del usuario
+        loader.load('assets/models/Remo.glb', gltf=>{
+          kayakGroup.remove(remo); // saca el placeholder
+          remo = gltf.scene;
+          remo.scale.set(1,1,1);
+          remo.position.set(0,-0.25,-0.1);
+          remo.traverse(n=>{ if(n.isMesh){ n.castShadow=true; } });
+          kayakGroup.add(remo);
+          console.log('Remo GLB ✓');
+        }, undefined, err=>console.warn('Remo GLB err:',err));
+
+      } catch(e){ console.warn('GLTFLoader:',e); }
+    })();
+
+    // ─── SKYBOX TEXTURA ───────────────────────────────────────────────────────
+    const skyTex = new THREE.TextureLoader().load('assets/images/textura_cielo.jpeg');
+    skyTex.mapping = THREE.EquirectangularReflectionMapping;
+    const skyDome = new THREE.Mesh(
+      new THREE.SphereGeometry(1000,32,32),
+      new THREE.MeshBasicMaterial({ map:skyTex, side:THREE.BackSide })
+    );
+    scene.add(skyDome);
 
     // ─── LUCES ────────────────────────────────────────────────────────────────
     scene.add(new THREE.AmbientLight(0xffccee, 1.4));
